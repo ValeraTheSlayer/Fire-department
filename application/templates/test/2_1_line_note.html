@@ -1,0 +1,292 @@
+{% extends "application/0_index.html" %}
+
+{% block title %}Строевая записка{% endblock %}
+
+{% block content %}
+    <form method="post">
+    {% csrf_token %}
+    <div class="row" >
+        <h2 style="text-align: center;">ПЧ-{{ fire_department.unique_id }} Строевая записка дежурной смены на {{ date_stroegoi_zapiska }}</h2>
+        <div class="col">
+            <h4 style="text-align: center">Личный состав</h4>
+            <table class="table">
+                  <thead class="table-light">
+                    <tr>
+                        <td>#</td>
+                        <td style="text-align: center">Название</td>
+                        <td>+/-</td>
+                        <td>Кол-во</td>
+                    </tr>
+                  </thead>
+                <tbody>
+                <tr>
+                    <td >0.</td>
+                    <td style="text-align: right;">по штату:</td>
+                    <td>~</td>
+                    <td id="number_fighters">{{ fire_department.number_fighters }}</td>
+                </tr>
+                <tr>
+                    <td>1.</td>
+                    <td style="text-align: right;">по списку:</td>
+                    <td>+</td>
+                    <td><input type="number" min="0" max="{{ fire_department.number_fighters }}" value="0"
+                    name="list_of_fighter"></td>
+                </tr>
+                <tr>
+                    <td>2.</td>
+                    <td style="text-align: right;">в отпуске:</td>
+                    <td>-</td>
+                    <td><input type="number" min="0" max="{{ fire_department.number_fighters }}" value="0"
+                    name="on_holiday"></td>
+                </tr>
+                <tr>
+                    <td>3.</td>
+                    <td style="text-align: right;">по болезни:</td>
+                    <td>-</td>
+                    <td><input type="number" min="0" max="{{ fire_department.number_fighters }}" value="0"
+                    name="sick"></td>
+                </tr>
+                <tr>
+                    <td>4.</td>
+                    <td style="text-align: right;">в командир:</td>
+                    <td>-</td>
+                    <td><input type="number" min="0" max="{{ fire_department.number_fighters }}" value="0"
+                    name="work_trip"></td>
+                </tr>
+                <tr>
+                    <td>5.</td>
+                    <td style="text-align: right;">прочие:</td>
+                    <td>-</td>
+                    <td><input type="number" min="0" max="{{ fire_department.number_fighters }}" value="0"
+                    name="other_staff"></td>
+                </tr>
+                <tr>
+                    <td>6.</td>
+                    <td style="text-align: right;">прикоманд.:</td>
+                    <td>+</td>
+                    <td><input type="number" min="0" max="{{ fire_department.number_fighters }}" value="0"
+                    name="work_trip_forced"></td>
+                </tr>
+                <tr>
+                    <td>7.</td>
+                    <td style="text-align: right;">на лицо:</td>
+                    <td>=</td>
+                    <td class="total_calculation">0</td>
+                </tr>
+                </tbody>
+            </table>
+            <h4 style="text-align: center">Сост. караула не б/р</h4>
+            <table class="table">
+                  <thead class="table-light">
+                    <tr>
+                        <td>#</td>
+                        <td style="text-align: center">Название</td>
+                        <td>+/-</td>
+                        <td>Кол-во</td>
+                    </tr>
+                  </thead>
+                <tbody>
+                <tr>
+                    <td >8.</td>
+                    <td style="text-align: right;">диспетчер:</td>
+                    <td>-</td>
+                    <td><input type="number" min="0" max="{{ fire_department.number_fighters }}" value="0"
+                    name="dispetcher"></td>
+                </tr>
+                <tr>
+                    <td>9.</td>
+                    <td style="text-align: right;">в наряде:</td>
+                    <td>-</td>
+                    <td><input type="number" min="0" max="{{ fire_department.number_fighters }}" value="0"
+                    name="v_naryadi"></td>
+                </tr>
+                <tr>
+                    <td>10.</td>
+                    <td style="text-align: right;">не подгот:</td>
+                    <td>-</td>
+                    <td><input type="number" min="0" max="{{ fire_department.number_fighters }}" value="0"
+                    name="ne_podgot"></td>
+                </tr>
+
+                </tbody>
+            </table>
+            <h4 style="text-align: center">Сост. караула б/р</h4>
+            <table class="table">
+                  <thead class="table-light">
+                    <tr>
+                        <td>#</td>
+                        <td style="text-align: center">Название</td>
+                        <td>+/-</td>
+                        <td>Кол-во</td>
+                    </tr>
+                  </thead>
+                <tbody>
+                <tr>
+                    <td >11.</td>
+                    <td style="text-align: right;">всего:</td>
+                    <td>=</td>
+                    <td class="total_calculation"></td>
+                </tr>
+                <tr>
+                    <td>12.</td>
+                    <td style="text-align: right;">ГДЗ:</td>
+                    <td></td>
+                    <td><input type="number" min="0" max="{{ fire_department.number_fighters }}" value="0"
+                    name="gdz"></td>
+                </tr>
+                <tr>
+                    <td>13.</td>
+                    <td style="text-align: right;">остальные:</td>
+                    <td></td>
+                    <td class="total_calculation"></td>
+                </tr>
+
+                </tbody>
+            </table>
+        </div>
+        <div class="col">
+            <h4>Основные средства</h4>
+            <table class="table">
+                  <thead class="table-light">
+                    <tr>
+                        <td>#</td>
+                        <td>Название</td>
+                        <td>Кол-во</td>
+                    </tr>
+                  </thead>
+                <tbody>
+                {% for arsenal in arsenal_list %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ arsenal.resource.brand }}</td>
+                    <td>{{ arsenal.number }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <h4>Ответсвенные лица</h4>
+            <table class="table">
+                  <thead class="table-light">
+                    <tr>
+                        <td>Должность</td>
+                        <td>ФИО</td>
+                    </tr>
+                  </thead>
+                <tbody>
+                <tr>
+                    <td>Начальник дежур.караула</td>
+                    <td>
+                        <select name="head_guard" id="head_guard">
+                            <option value="None">--------</option>
+                            {% for st in staff %}
+                            <option value="{{ st.id }}">{{ st.surname }} {{ st.name }} {{ st.patronymic }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Диспетчер (радиотел-ст)</td>
+                    <td>
+                        <select name="dispetcher_radio" id="dispetcher_radio">
+                            <option value="None">--------</option>
+                            {% for st in staff %}
+                            <option value="{{ st.id }}">{{ st.surname }} {{ st.name }} {{ st.patronymic }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Ответсвенный деж.по ПЧ</td>
+                    <td>
+                        <select name="responsible_person" id="responsible_person">
+                            <option value="None">--------</option>
+                            {% for st in staff %}
+                            <option value="{{ st.id }}">{{ st.surname }} {{ st.name }} {{ st.patronymic }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                </tr>
+
+                </tbody>
+            </table>
+            <button type="submit" class="btn btn-primary">
+                  Ввести
+            </button>
+        </div>
+    </div>
+
+    </form>
+{% endblock %}
+
+
+{% block js %}
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+    <script>
+    $(function() {
+    let total_calculation = 0
+    $("input[name='list_of_fighter']").change(function(){
+        let changed_value = parseInt($(this).val());
+        let number_fighters = parseInt($('#number_fighters').text());
+        if (changed_value <= number_fighters){
+            total_calculation = changed_value;
+        } else {
+            $("input[name='list_of_fighter']").val(number_fighters);
+            total_calculation = number_fighters;
+        }
+
+
+         $('.total_calculation').text(total_calculation)
+    });
+    $("input[name='on_holiday']").change(function(){
+        let changed_value = parseInt($(this).val());
+        if (changed_value <= total_calculation) {
+            total_calculation -= changed_value;
+            $('.total_calculation').text(total_calculation)
+        } else {
+            $("input[name='on_holiday']").val(total_calculation);
+        };
+    });
+    $("input[name='sick']").change(function(){
+        let changed_value = parseInt($(this).val());
+        if (changed_value <= total_calculation) {
+            total_calculation -= changed_value;
+            $('.total_calculation').text(total_calculation)
+        } else {
+            $("input[name='sick']").val(total_calculation);
+        };
+    });
+    $("input[name='work_trip']").change(function(){
+        let changed_value = parseInt($(this).val());
+        if (changed_value <= total_calculation) {
+            total_calculation -= changed_value;
+            $('.total_calculation').text(total_calculation)
+        } else {
+            $("input[name='work_trip']").val(total_calculation);
+        };
+    });
+    $("input[name='other_staff']").change(function(){
+        let changed_value = parseInt($(this).val());
+        if (changed_value <= total_calculation) {
+            total_calculation -= changed_value;
+            $('.total_calculation').text(total_calculation)
+        } else {
+            $("input[name='other_staff']").val(total_calculation);
+        };
+    });
+    $("input[name='work_trip_forced']").change(function(){
+        let changed_value = parseInt($(this).val());
+        let list_of_fighter = parseInt($("input[name='list_of_fighter']").val())
+        let sick = parseInt($("input[name='sick']").val())
+        let on_holiday = parseInt($("input[name='on_holiday']").val())
+        let work_trip = parseInt($("input[name='work_trip']").val())
+        let other_staff = parseInt($("input[name='other_staff']").val())
+        console.log(changed_value)
+        console.log(list_of_fighter)
+        total_calculation = changed_value + list_of_fighter - sick - on_holiday - work_trip - other_staff
+        $('.total_calculation').text(total_calculation)
+    });
+    });
+
+    </script>
+
+{% endblock %}

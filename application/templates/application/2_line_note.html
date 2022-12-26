@@ -1,0 +1,53 @@
+{% extends "application/0_index.html" %}
+
+{% block title %}Строевая записка{% endblock %}
+
+{% block content %}
+
+        <div style="text-align: center;">
+        {% if perms.application.user_main_call_center_city %}
+            <h3> Сил и средств противопожарной службы ДЧС города {{ userinfo.city.name }} </h3>
+        {% elif perms.application.user_fire_department_call_center %}
+            <h3> Сил и средств {{ userinfo.department.unique_id }} города {{ userinfo.city.name }} </h3>
+        {% endif %}
+            {% if warning %}
+                <h5 style="color: #bdbd2e;">{{ warning }}</h5>
+            {% endif %}
+            <form method="post" action="/main_page/line-note/">
+                {% csrf_token %}
+              <div class="mb-3">
+
+                <input type="date" class="form-control" id="date_line_note" name="date_line_note" min="2021-01-01">
+              </div>
+              <button type="submit" class="btn btn-primary">
+                Ввести
+            </button>
+            </form>
+           
+        </div>
+{% endblock %}
+{% block js %}
+    <script>
+    $(document).ready(function(){
+    // Set today
+    document.getElementById('date_line_note').valueAsDate = new Date;
+    let today = new Date();
+    let dd = today.getDate();
+    let mm = today.getMonth()+1; //January is 0!
+    let yyyy = today.getFullYear();
+     if(dd<10){
+            dd='0'+dd
+        }
+        if(mm<10){
+            mm='0'+mm
+        }
+
+    today = yyyy+'-'+mm+'-'+dd;
+    document.getElementById('date_line_note').setAttribute('max', today);
+    });
+
+
+
+        //
+    </script>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends "application/0_index.html" %}
+{% load widget_tweaks %}
+{% block title %}Текущие Обращения{% endblock %}
+{% block header_link %}
+{% load static %}
+{% load poll_extras %}
+<script type="text/javascript" src="{% static 'javascript/moments/moments.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'javascript/daterangepicker/daterangepicker.min.js' %}"></script>
+<link rel="stylesheet" type="text/css" href="{% static 'javascript/daterangepicker/daterangepicker.css' %}" />
+{# Maps is here   #}
+<script src="://polyfill.io/v3/polyfill.min.js?features=default"></script>
+<link rel="stylesheet" type="text/css" href="{% static 'map/style.css' %}" />
+<script src="{% static 'map/index.js' %}"></script>
+<link href="{% static 'javacript/select2/select2.min.css' %}" rel="stylesheet" />
+<script src="{% static 'javacript/select2/select2.min.js' %}"></script>
+<link href="{% static 'map/2gis.css' %}" rel="stylesheet" />
+{%endblock%}
+{% block style %}
+    <style>
+
+        td {
+            width: 50%;
+        }
+        .modal {
+            z-index: 20;
+        }
+        .modal-backdrop {
+            z-index: 10;
+        }
+        .select2 {
+            width:100%!important;
+        }
+        .select2-selection__rendered {
+            line-height: 31px !important;
+        }
+        .select2-container .select2-selection--single {
+            height: 35px !important;
+        }
+        .select2-selection__arrow {
+            height: 34px !important;
+        }
+        .select2-results__option--selected {
+          background: #6c757d;
+        }
+        .fake_button{
+            display: inline-block;
+            background: #007bff;
+            border-radius: 4px;
+            color: #FFF;
+            padding: 8px 12px;
+            cursor: pointer;
+
+        }
+        .appeal_list {
+          padding: 15px 0;
+          border: solid 1px #555;
+          box-shadow:  3px 3px  5px  rgba(0,0,0,0.6);
+          -moz-box-shadow:  3px 3px  5px  rgba(0,0,0,0.6);
+          -webkit-box-shadow:  3px 3px  5px  rgba(0,0,0,0.6);
+          -o-box-shadow:  3px 3px 5px  rgba(0,0,0,0.6);
+          border-radius: 8px;
+        }
+        .appeal_list:hover {
+          cursor: pointer;
+          background-color: #c7c6c3;
+          box-shadow:  0 0 10px  rgba(0,0,0,0.6);
+          -moz-box-shadow:  0 0 10px  rgba(0,0,0,0.6);
+          -webkit-box-shadow:  0 0 10px  rgba(0,0,0,0.6);
+          -o-box-shadow:  0 0 10px  rgba(0,0,0,0.6);
+        }
+        .appeal_content {
+            padding: 5px;
+            color: #52bfe3;
+            font-weight: bold;
+        }
+
+    .modal {
+        overflow: auto;
+    }
+
+    .scroll-hidden {
+        overflow-y: hidden;
+    }
+
+    #new_income_button_modal,
+    .btn-filter-form {
+        text-transform: uppercase;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-row-flex {
+        display: flex;
+        column-gap: 1rem;
+    }
+
+    .form-row-flex col {
+        flex: 1;
+    }
+
+    .modal-row {
+        display: flex;
+    }
+
+    .audio-row-group {
+        display: flex;
+        flex: 1;
+    }
+
+    .audio-row-group audio {
+        flex: 1;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    #new_income_button_modal {
+        width: fit-content;
+    }
+
+    .audio-row-group {
+        column-gap: 1rem;
+    }
+
+    </style>
+
+{% endblock %}
+{% block content %}
+
+{% load poll_extras %}
+
+<div class="row">
+
+    <div class="table-container col-9">
+
+        {% for i in all_know %}
+            <p> {{ i }} </p>
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block js %}
+    <script>
+    var j_lock = '{{ all_know | js }}';
+    let json_data = JSON.parse(JSON.stringify(j_lock));
+
+    console.log(json_data);
+
+
+
+    </script>
+{% endblock %}

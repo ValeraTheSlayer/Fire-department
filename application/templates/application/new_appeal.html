@@ -1,0 +1,431 @@
+<style>
+  /*Select2 ReadOnly Start*/
+  select[readonly].select2-hidden-accessible + .select2-container {
+        pointer-events: none;
+        touch-action: none;
+    }
+
+    select[readonly].select2-hidden-accessible + .select2-container .select2-selection {
+        background: #eee;
+        box-shadow: none;
+    }
+
+    select[readonly].select2-hidden-accessible + .select2-container .select2-selection__arrow, select[readonly].select2-hidden-accessible + .select2-container .select2-selection__clear {
+        display: none;
+    }
+    .headers {
+      font-weight:bold;
+    }
+/*Select2 ReadOnly End*/
+</style>
+<div class="modal fade" id="NewCallModal" tabindex="-1" aria-labelledby="NewCallModalLabel" aria-hidden="true"
+data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="NewCallModalLabel">Новая карточка </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+      <form class="row g-3" method="post" id="current_emergency_form" action="/main_page/"">
+        {% csrf_token %}
+        <div class="col-md-4">
+          <label for="date_of_call" class="form-label">Дата вызова</label>
+          <input type="text" class="form-control" id="date_of_call" name="date_of_call" >
+        </div>
+       <div class="col-md-2">
+          <label for="time_of_call" class="form-label">Начало звонка</label>
+          <input type="time" class="form-control" id="time_of_call" step="1" name="time_of_call">
+        </div>
+        <div class="col-md-2">
+          <label for="time_of_call_end" class="form-label">Конец звонка</label>
+          <input type="time" class="form-control" id="time_of_call_end" step="1" name="time_of_call_end">
+        </div>
+        <div class="col-md-4">
+          <label for="income_call_number" class="form-label">Номер телефона заявителя</label>
+          <!--data-mask="+9 (999) 999-9999"-->
+          <input type="text" class="form-control" id="income_call_number" name="income_call_number">
+        </div>
+        <div class="col-md-3" id="div_count_call_new_appeal" style="display: none;">
+          <label for="count_call_new_appeal" class="form-label">Количество звонков клиента</label>
+            <div style="display: flex">
+              <input style="margin-right: 5px;" type="text" class="form-control" id="count_call_new_appeal" readonly>
+              <button type="button" class="btn btn-primary" id="show_all_call_number_new_appeal">Посмотреть</button>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+          <label for="income_call_name" class="form-label">ФИО заявителя</label>
+          <input type="text" class="form-control" id="income_call_name" name="income_call_name">
+        </div>
+        <div class="col-md-6">
+          <label for="address_modal" class="form-label" id="address" >Адрес</label>
+          <input  class="form-control" id="address_modal" name="address" type="text" size="50">
+      </div>
+      <div class="col-md-1">         
+        <label for="flat" class="form-label">Дом</label>
+        <input type="text" class="form-control" id="house" name="house">        
+      </div>
+      <div class="col-md-1">         
+        <label for="flat" class="form-label">Кв</label>
+        <input type="text" class="form-control" id="flat" name="flat">        
+      </div>
+        <div class="col-md-6" style="display:none;">
+          <label for="iin" class="form-label">ИИН клиента</label>
+          <input type="text" class="form-control" id="iin" name="iin">
+        </div>
+        <div class="col-md-3" style="display:none;">
+          <label for="email" class="form-label">Адрес эл.почты</label>
+          <input type="text" class="form-control" id="email" name="email">
+        </div>
+      <div class="col-md-3" style="display:none;">
+          <label for="callback_number" class="form-label">Номер для обратной связи</label>
+          <input type="text" class="form-control" id="callback_number" name="callback_number" data-mask="+9 (999) 999-9999">
+        </div>
+
+
+      <div class="col-md-2" style="display:none;">
+              <label for="citizenship" class="form-label">Гражданство</label>
+              <input type="text" class="form-control" id="citizenship" name="citizenship">
+            </div>
+
+        <div class="col-md-5" style="display:none;">
+            <div class="row">
+
+                <div class="col">
+                    <label for="city" class="form-label">Город</label>
+                    <select class="form-select select2_selection" id="city" name="city">
+                        {% for cc in city %}
+                           <option value="{{ cc.id }}">{{ cc }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col" style="display:none;">
+                    <label for="borderpost" class="form-label">Пограничный пост</label>
+                    <select class="form-select select2_selection" id="borderpost" name="borderpost">
+                        {% for bor in borderpost %}
+                           <option value="{{ bor.id }}">{{ bor }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+            </div>
+
+        </div>
+    <!-- <div class="col-12">
+        <div class="row">
+        <div class="col-11">
+            <label for="address_modal" class="form-label">Адрес</label>
+            <input  class="form-control" id="address_modal" name="address" type="text" size="50">
+        </div>
+
+    </div>
+  </div>      -->
+  <!-- <div class="col-12">
+    <div class="row">
+        <div id="map" style="width: 100%; height: 300px;"></div>
+    </div>
+  </div> -->
+  <div class="col-12">
+    <div class="row">
+        <div class="col">
+            <label for="borderpost" class="form-label">Тип выезда:</label>
+            <select class="form-select " id="emergency_type" name="emergency_type">     
+                {% for item in emergency_types %}                   
+                   <option value="{{item.id}}" selected="">{{item.name}}</option>                   
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col">
+            <label for="borderpost" class="form-label">Наименование объекта:</label>
+            <select class="form-select " id="object_category" name="object_category" required>                
+              <option value="none" selected disabled hidden>Выберите</option>         
+                {% for item in object_categories %}                     
+                   <option value="{{item.id}}" >{{item.name}}</option>                   
+                {% endfor %}           
+            </select>
+        </div>
+    </div>
+    </div>
+    <div class="col-12">
+        <div class="row">
+            <div class="col-6">
+                <label for="borderpost" class="form-label">Ранг</label>
+                <select class="form-select " id="emergency_rank" name="emergency_rank">                    
+                    {% for item in emergency_ranks %}                   
+                    <option value="{{item.id}}" selected="">{{item.rank}}</option>                   
+                    {% endfor %}                       
+                </select>
+            </div>
+            <div class="col-6">
+                <label for="object_owner" class="form-label">Владелец объекта</label>
+              
+                <input type="text" class="form-control" id="object_owner" name="object_owner">
+            </div>
+        </div>
+    </div> 
+    <div class="col-12">
+        <label for="department" class="form-label">Пожарная часть</label>
+        <select class="form-select select2_selection" id="department" name="department" required multiple="multiple">
+            {% for d in departaments %}
+               <option value="{{d.id}}">{{d}}</option>                   
+            {% endfor %}
+        </select>
+    </div>    
+        <div class="col-md-5" style="display:none;">
+          <div class="row">
+
+              <div class="col-8">
+                <label for="street" class="form-label">Улица</label>
+                <input type="text" class="form-control" id="street" name="street">
+              </div>
+              <div class="col-2">
+                <label for="house" class="form-label">Дом</label>
+                <input type="text" class="form-control" id="house" name="house">
+              </div>
+
+          </div>
+        </div>
+
+
+        <div class="col-6" style="display:none;">
+            <label for="question_category" class="form-label">Категория вопроса</label>
+            <select class="form-select" id="question_category" name="question_category" required>
+                {% for q_cat in question_category %}
+                   <option value="{{ q_cat.id }}" {%if forloop.counter == 1%}selected{% endif %}>{{ q_cat }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-6" style="display: none;">
+            <label for="operator_name" class="form-label">ФИО оператора call центра</label>
+            <input type="text" class="form-control" id="operator_name" value="{{ user.last_name }} {{ user.first_name }}" readonly>
+        </div>           
+        <div class="col-12">
+            <label for="short_question">Первичная информация по сообщению</label>
+            <textarea style="height: 20px;" placeholder="Введите местоположение" class="form-control" id="short_question" rows="3" name="short_question" required></textarea>
+        </div>
+        <div class="col-6" style="display:none;">
+            <label for="responsible_depart" class="form-label" style="display:none;">Уполномоченное подразделение</label>
+            <input type="text" class="form-control" id="responsible_depart" value="CALL ЦЕНТР" readonly>
+        </div>
+        <div class="col-12">
+            <label for="transport1" class="form-label">Руководитель тушения пожара</label>
+            <select class="form-select" id="responsible_department_person" name="responsible_department_person">
+                {% for b in bosses %}
+                <option value="{{b.id}}">{{b.full_name}}</option>                
+                {% endfor %}                
+            </select>      
+            
+        </div>
+        <div class="col-12">
+          <div class="row">
+            <div class="col-10">
+              <label for="transport" class="form-label">Силы и средства</label>
+              <select class="form-select select2_selection" id="transport" name="transport" multiple="multiple" readonly>                
+                  {% for t in transport %}
+                    <option value="{{ t.id }}" {%if forloop.counter == 1%}selected{% endif %}>{{ t }}</option>
+                  {% endfor %}            
+              </select>
+            </div>
+            <div class="col-2" style="padding-top:30px;">
+              <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                Выбрать
+              </button>
+          </div>
+          </div>
+        </div>
+        <input type="hidden" class="form-control" id="api_unique_id" name="api_unique_id" readonly>
+
+        <div class="col-6" style="display:none;">
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary" id="send_to_department_problem">НАПРАВИТЬ В УПОЛНОМОЧЕННОЕ ПОДРАЗДЕЛЕНИЕ</button>
+            </div>
+        </div>
+        {# HIDDEN INPUT VALUES #}
+          <input type="hidden" name="status" id="status">
+      
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary smm" type="submit">Добавить новый вызов</button>
+        <button type="button" class="btn btn-warning" data-bs-dismiss="modal">Закрыть</button>
+      </div>
+    </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade " id="exampleModal"  tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl" >
+    <div class="modal-content" style="background: #CCC;">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Выбор транспорта</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+
+        <div>
+          <select class="form-select select2_selection" id="pzh_chooser" name="pzh">   
+          {% for d in departaments %}
+               <option value="{{d.id}}">{{d}}</option>                             
+          {% endfor %}
+          </select>
+          <input type="text" id="transport_search" class="form-control" placeholder="Поиск ..." style="margin-top: 20px;margin-bottom: 20px;"> 
+        </div>
+        <div class="row headers">
+          <div class="col-1">
+            ПЧ
+          </div>
+          <div class="col-2">
+            Марка
+          </div>
+          <div class="col-2">
+            Тип
+          </div>
+          <div class="col-2">
+            Модель
+          </div>   
+          <div class="col-2">
+            Борт.номер
+          </div>      
+          <div class="col-1">
+            Рег.номер
+          </div>
+          <div class="col-2">
+            Выбрать
+          </div>  
+        </div>
+        {% for t in transport %}
+        <div class="row pzh_transport" data-pzh-id="{{t.department.id}}">
+          <div class="col-1">
+            {{t.department.name}}
+          </div>
+          <div class="col-2">         
+            {{t.brand}}
+          </div>
+          <div class="col-2">
+           {{t.type}}
+          </div>
+          <div class="col-2">
+            {{t.trans_model}}
+          </div>
+          <div class="col-2">
+            {{ t.bort_number }}
+          </div>
+          <div class="col-1">
+            {{t.new_number}}
+          </div>
+          <div class="col-2">
+            <input type="checkbox" class="pzh_transport_checkbox" value="{{t.id}}" data-name="{{t}}">
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+        <button type="button" class="btn btn-primary save_transport_for_emergency">Сохранить изменения</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  $("#tranport").select2("readonly", true);
+  $("#transport_search").keyup(function(){
+
+    var search = $(this).val();
+    var pzh_id = $("#pzh_chooser").val();
+    $(".pzh_transport").hide();
+    $(".pzh_transport").each(function(){
+      if($(this).data("pzh-id") == pzh_id){
+        if($(this).find("div:contains('"+search+"')").length > 0){
+          $(this).show();
+        }else{
+          $(this).hide();
+        }
+      }
+    });
+
+  });
+  $("#object_category").select2({
+      tags: true,
+      createTag: function (tag) {
+        return {
+            id: tag.term,
+            text: tag.term,
+            isNew : true
+        };
+    }
+
+  }).on("select2:select", function(e) {
+
+    if(e.params.data.isNew){
+        // append the new option element prenamently:
+        $(this).find('[value="'+e.params.data.id+'"]').replaceWith('<option selected value="'+e.params.data.id+'">'+e.params.data.text+'</option>');
+        // store the new tag:
+
+    }});
+
+  $(".save_transport_for_emergency").click(function(){
+    $('#transport').empty().trigger("change");
+     $(".pzh_transport_checkbox:checked").each(function(){
+           
+          var newOption = new Option($(this).attr("data-name"), $(this).val(), false, true);
+          $('#transport').append(newOption).trigger('change');
+      
+    });
+    $('#exampleModal').modal('toggle');
+  });
+  
+  $("#pzh_chooser").change(function(){
+    $(".pzh_transport").hide();
+    $(".pzh_transport[data-pzh-id="+$(this).val()+"]").show();
+  });
+  $("#department").change(function(){
+    //ajax 
+    var department = $("#department").val();
+    $("#pzh_chooser").select2("val", department);
+    
+    $.ajax({
+      url: "/main_page/get_emergency_boss/",
+      method: "POST",
+      data: {'department': department},
+
+      success: function(data){
+        $('#responsible_department_person').empty().trigger("change");
+        $('#transport').empty().trigger("change");
+
+        console.log(data);
+    
+        for(var i = 0; i < data.bosses.length; i++){          
+          var newOption = new Option(data.bosses[i].name, data.bosses[i].id, false, false);
+          $('#responsible_department_person').append(newOption).trigger('change');
+        }
+
+        // for(var i = 0; i < data.transport.length; i++){          
+        //   var newOption = new Option(data.transport[i].name, data.transport[i].id, false, true);
+        //   $('#transport').append(newOption).trigger('change');
+        // }
+
+      }
+    });
+  });
+</script>
+<script type="text/javascript">
+
+let url = `ws://${window.location.host}/ws/socket-server/`
+chatSocket = new WebSocket(url)
+
+let form = document.getElementById("address_modal");
+let form2 = document.getElementById("house");
+
+
+form2.addEventListener('input', (e)=>{
+let message = form.value;
+let message2 = form2.value;
+chatSocket.send(JSON.stringify(
+    {'message': message,
+     'message2': message2,}
+))})
+</script>

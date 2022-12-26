@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>2Gis</title>
+    <script src="https://maps.api.2gis.ru/2.0/loader.js?pkg=full&skin=dark"></script>
+</head>
+<body>
+<div id="map" style="width:500px; height:400px"></div>
+<script type="text/javascript">
+    let map;
+
+    DG.then(function () {
+        map = DG.map('map', {
+            center: [54.98, 82.89],
+            zoom: 13
+        });
+        DG.marker([54.98, 82.89]).addTo(map).bindPopup('Вы кликнули по мне!');
+        // var southWest = DG.latLng(54.9801, 82.8974),
+        // northEast = DG.latLng(54.9901, 82.9074),
+        // bounds = DG.latLngBounds(southWest, northEast);
+        // map.fitBounds([
+        //     [54.9801, 82.8974],
+        //     [54.9901, 82.9074]
+        // ]);
+
+        var p1 = DG.point(10, 10),
+            p2 = DG.point(40, 60),
+            bounds = DG.bounds(p1, p2);
+    });
+
+
+</script>
+</body>
+</html>

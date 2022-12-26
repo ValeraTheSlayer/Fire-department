@@ -1,0 +1,94 @@
+{% extends "application/0_index.html" %}
+
+{% block title %}Строевая записка{% endblock %}
+
+{% block content %}
+    <div class="accordion" id="list_of_man_powers">
+    {% for man_power in man_powers %}
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="man_power_{{forloop.counter}}">
+          <button class="accordion-button {% if forloop.counter != 1 %}collapsed {% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_{{forloop.counter}}" aria-expanded="{% if forloop.counter == 1 %}true{%else%}false{%endif%}" aria-controls="collapse_{{forloop.counter}}">
+              <span class="col"><span class="fw-bold text-muted">Дата: </span>{{man_power.date_line_note|date:"d/m/Y"}}
+              <span class="fw-bold text-muted">Город: </span>{{man_power.number_fighter.city.name}}
+              <span class="fw-bold text-muted">ПЧ: </span>{{ man_power.number_fighter }} </span>
+
+          </button>
+        </h2>
+        <div id="collapse_{{forloop.counter}}" class="accordion-collapse collapse {% if forloop.counter == 1 %}show{%endif%}" aria-labelledby="man_power_{{forloop.counter}}" data-bs-parent="#list_of_man_powers">
+          <div class="accordion-body">
+            <table class="table table-striped table-hover table-borderless">
+              <tbody>
+              <tr>
+                  <td><span class="fw-bold text-muted">Личный состав</span></td>
+                  <td><span class="fw-bold text-muted">Кол-во</span></td>
+              </tr>
+              <tr>
+                    <td>по штату:</td>
+                    <td>{{ man_power.number_fighter.number_fighters }}</td>
+                </tr>
+                <tr>
+                    <td>по списку:</td>
+                    <td>{{ man_power.list_of_fighter }}</td>
+                </tr>
+                <tr>
+                    <td>в отпуске:</td>
+                    <td>{{ man_power.on_holiday }}</td>
+                </tr>
+                <tr>
+                    <td>по болезни:</td>
+                    <td>{{ man_power.sick }}</td>
+                </tr>
+                <tr>
+                    <td>в командир:</td>
+                    <td>{{ man_power.work_trip }}</td>
+                </tr>
+                <tr>
+                    <td>прочие:</td>
+                    <td>{{ man_power.other_staff }}</td>
+                </tr>
+                <tr>
+                    <td>прикоманд.:</td>
+                    <td>{{ man_power.work_trip_forced }}</td>
+                </tr>
+                <tr>
+                    <td><span class="fw-bold text-muted">Силы и средства</span></td>
+                    <td><span class="fw-bold text-muted">Кол-во</span></td>
+                </tr>
+                {% for arsenal in arsenal_list %}
+                <tr>
+                    <td><span class="fw-bold text-muted">{{ arsenal.resource.brand }} </span></td>
+                    <td>{{ arsenal.number }}</td>
+                </tr>
+                {% endfor %}
+                <tr>
+                  <td><span class="fw-bold text-muted">Начальник дежур.караула</span></td>
+                  <td>{% if man_power.head_of_guard %}{{ man_power.head_guard }}{% else %}-----{% endif %}</td>
+                </tr>
+                <tr>
+                  <td><span class="fw-bold text-muted">Диспетчер (радиотел-ст)</span></td>
+                  <td>{% if man_power.dispetcher_radio %}{{ man_power.dispetcher_radio }}{% else %}-----{% endif %}</td>
+                </tr>
+                <tr>
+                  <td><span class="fw-bold text-muted">Ответсвенный деж.по ПЧ</span></td>
+                  <td>{% if man_power.responsible_person %}{{ man_power.responsible_person }}{% else %}-----{% endif %}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+
+{% block js %}
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+    <script>
+    $(function() {
+
+    });
+
+    </script>
+
+{% endblock %}

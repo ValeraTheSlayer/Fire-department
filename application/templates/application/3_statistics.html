@@ -1,0 +1,296 @@
+{% extends "application/0_index.html" %}
+
+{% block title %}Статистика{% endblock %}
+{% load static %}
+{% block header_link %}
+    <link rel="stylesheet" type="text/css" href="{% static 'javascript/chart/Chart.css' %}" />
+{#    <script src="{% static 'javascript/chart/Chart.js' %}"></script>#}
+    <script src="{% static 'javascript/chart/chart.min.js' %}"  referrerpolicy="no-referrer"></script>
+    <script src="{% static 'javascript/chart/chartjs-plugin-datalabels.min.js' %}"  referrerpolicy="no-referrer"></script>
+{% endblock %}
+{% block style %}
+    <style>
+        .datetime-element {
+            font-family: Roboto, sans-serif;
+            font-size: 30px;
+        }
+
+        .time-field {
+            font-size: 50px;
+        }
+
+        .dashboard {
+            display: flex;
+            column-gap: 50px;
+        }
+
+        .left-col {
+            flex: 7;
+        }
+
+        .right-col {
+            flex: 5;
+        }
+
+    #myChart,
+    #myPieChart {
+        width: 100%;
+        height: 100%;
+    }
+
+
+    </style>
+{% endblock %}
+{% block content %}
+<div class="container">
+
+
+    <div class="dashboard">
+        <div class="left-col">
+            <div class="datetime-wrapper">
+                <div class="datetime-element">
+                    <span class="time-field"></span>
+                    <span class="date-field"></span>
+                </div>
+            </div>
+            <div class="operator-stats-wrapper">
+                <canvas id="myChart"></canvas>
+            </div>
+        </div>
+        <div class="right-col">
+            <div class="calls-stats-wrapper">
+                <div style="font-size: 18px;text-align: center;">Категория объекта</div>
+                <canvas id="myPieChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <button type="button" class="fullscreen-btn">FullScreen</button>
+    </div>
+    <div class="row" style="margin-top: 15px;">
+        <div class="col">
+            <div class="d-grid gap-2">
+              <a href="/main_page/stat_pdf/" class="btn btn-primary" type="button">Сформировать отчет</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+
+document.querySelector('.fullscreen-btn').addEventListener('click', changeFullscreenMode);
+
+function changeFullscreenMode() {
+    if(document.fullscreenElement) {
+        closeFullscreen();
+    }
+    else {
+        openFullscreen(document.querySelector('.dashboard'));
+    }
+}
+
+function openFullscreen(element) {
+    if(element.requestFullscreen) {
+        element.requestFullscreen();
+    }
+}
+
+function closeFullscreen() {
+    if(document.exitFullscreen) {
+        document.exitFullscreen();
+    }
+}
+
+class DigitalDateTime {
+    constructor(element) {
+        this.element = element;
+    }
+
+    start() {
+        this.updateTime();
+        this.updateDate();
+        setInterval(() => {
+            this.updateTime();
+            if(this.getTime().hours == 0 && this.getTime().minutes == 0 && this.getTime().seconds >= 0 && this.getTime().seconds < 5) {
+                this.updateDate();
+            }
+        }, 1000);
+    }
+
+    updateTime() {
+        const time = this.getTime();
+        const minutesFormatted = time.minutes.toString().padStart(2, "0");
+        const timeDisplayed = `${time.hours}:${minutesFormatted}`;
+
+        this.element.querySelector('.time-field').textContent = timeDisplayed;
+    }
+
+    updateDate() {
+        const date = this.getDate();
+        const monthFormatted = date.month.toString().padStart(2, "0");
+        const dayFormatted = date.day.toString().padStart(2, "0");
+        const dateDisplayed = `${dayFormatted}.${monthFormatted}.${date.year} г.`;
+
+        this.element.querySelector('.date-field').textContent = dateDisplayed;
+    }
+
+    getTime() {
+        const currTime = new Date();
+
+        return {
+            hours: currTime.getHours(),
+            minutes: currTime.getMinutes(),
+            seconds: currTime.getSeconds(),
+        }
+    }
+
+    getDate() {
+        const currDate = new Date();
+
+        return {
+            year: currDate.getFullYear(),
+            month: currDate.getMonth(),
+            day: currDate.getDate(),
+        }
+    }
+}
+
+const datetimeElement = document.querySelector('.datetime-element');
+const datetimeObj = new DigitalDateTime(datetimeElement);
+
+datetimeObj.start();
+
+
+const host_name = window.location.hostname;
+{#console.log();#}
+let socketAddress = 'ws://'+ host_name +'/ws/statistic/'
+let socket;
+function ws_connection() {
+    socket = new WebSocket(socketAddress);
+
+    socket.onopen = function () {
+        console.log('Connected to websocket open');
+    }
+
+    socket.onmessage = function (event) {
+        let statistic = JSON.parse(event.data)
+        if ('operators' in statistic){
+            console.log(statistic['operators'])
+        } else if ('question_category' in statistic){
+            console.log(statistic['question_category'])
+        }
+    };
+
+    socket.onclose = function (event) {
+        console.log('Connection interrupted', event);
+        setTimeout(function() {
+          ws_connection();
+        }, 1000);
+    };
+
+    socket.onerror = function(err) {
+        console.error('Socket encountered error: ', err.message, 'Closing socket');
+        ws.close();
+    };
+}
+
+ws_connection();
+
+const ctx_pie = document.getElementById('myPieChart').getContext('2d');
+const myPieChart = new Chart(ctx_pie, {
+
+    type: 'pie',
+    data: {
+        labels: [{% for t in cats %} '{{t.type.name}}', {% endfor %}],
+        datasets: [{
+            label: '# Количество обращений',
+            data: [{% for t in cats %} '{{t.count}}', {% endfor %}],
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.2)',
+                'rgba(54, 162, 235, 0.2)',
+                'rgba(255, 206, 86, 0.2)',
+                'rgba(75, 192, 192, 0.2)',
+            ],
+            borderColor: [
+                'rgba(255, 99, 132, 1)',
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 206, 86, 1)',
+                'rgba(75, 192, 192, 1)',
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        plugins: {
+            title: {
+                display: true,
+                text: ``,
+            },
+            legend: {
+                position: 'bottom',
+            },
+        },
+    },
+    plugins: [ChartDataLabels],
+})
+
+const ctx = document.getElementById('myChart').getContext('2d');
+const myChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: [{% for t in types %} '{{t.type.name}}', {% endfor %}],
+        datasets: [{
+            axis: 'y',
+            barThickness: 15,
+            data: [{% for t in types %} '{{t.count}}', {% endfor %}],
+            fill: false,
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.2)',
+                'rgba(54, 162, 235, 0.2)',
+                'rgba(255, 206, 86, 0.2)',
+                'rgba(75, 192, 192, 0.2)',
+                'rgba(153, 102, 255, 0.2)',
+            ],
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        elements: {
+            bar: {
+                borderWidth: 0,
+            }
+        },
+        plugins: {
+            datalabels: {
+                anchor: 'end',
+                align: 'end',
+                offset: 10,
+            },
+            title: {
+                display: true,
+                text: `Количество принятых звонков`,
+            },
+            legend: {
+                display: false
+            },
+        },
+        scales: {
+            x: {
+                display: false,
+                beginAtZero: true
+          },
+            y: {
+                ticks: {
+                    display: true,
+                }
+            }
+        }
+    },
+    plugins: [ChartDataLabels],
+});
+</script>
+
+
+{% endblock %}

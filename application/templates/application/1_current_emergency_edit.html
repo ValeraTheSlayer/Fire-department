@@ -1,0 +1,23 @@
+{% extends "application/0_index.html" %}
+
+{% block title %}Текущий выезд{% endblock %}
+{% block content %}
+<form method="post" action="{% url 'current_emergency_edit' cur_emg_id%}">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div style="text-align: center;">
+        <button type="submit" class="btn btn-warning">Сохранить изменение</button>
+    </div>
+
+</form>
+
+{% endblock %}
+{% block js %}
+    <script>
+    $(document).ready(function(){
+
+        $('#id_date_of_call_start').prop('readonly', true);
+        $('#id_date_of_call_end').prop('readonly', true);
+    });
+    </script>
+{% endblock %}

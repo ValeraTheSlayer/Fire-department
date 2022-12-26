@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Welcome to Python Guides</title>
+</head>
+<body>
+    <style type="text/css">
+        @font-face {
+        font-family: Arial; src: url("/app/application/static/fonts/DejaVuSansMono.ttf");
+        }
+        body {
+        font-family: Arial;
+        }
+        th {
+            font-weight: bold;
+            font-style: italic;
+            font-size:15px;
+        }
+        td {
+            text-align:center;
+            font-size:10px;
+            text-align: left;
+        }
+        .num {
+            text-align: center;
+        }
+        </style>
+
+    <h1>Статистика за Июль 2022 года</h1>
+    <table>
+        <tr>
+            <th>Название категории</th>
+            <th>Количество вызовов в категории</th>
+
+        </tr>
+        {% for t in types %}
+        <tr>
+            <td>{{t.type.name}}</td>
+            <td class="num">{{t.count}}</td>
+        </tr>
+        {% endfor %}
+
+    </table>
+</body>
+</html>

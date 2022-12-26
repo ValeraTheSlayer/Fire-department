@@ -1,0 +1,242 @@
+{% extends "application/0_index.html" %}
+
+{% block title %}База Знаний{% endblock %}
+
+{% block header_link %}
+    <link href="{% static 'javacript/select2/select2.min.css' %}" rel="stylesheet" />
+    <script src="{% static 'javacript/select2/select2.min.js' %}"></script>
+{%endblock%}
+
+{% block style %}
+
+    <style>
+
+    .page-container {
+        padding: 1vh 2vw;
+    }
+
+        .search-field i {
+            position: absolute;
+        }
+
+        .search-field {
+            width: 100%;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+            font-size: 1.2rem;
+        }
+
+        .icon {
+            padding: 1rem;
+            min-width: 40px;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 10px;
+            padding-left: 50px;
+            text-align: left;
+            border-radius: 10px;
+        }
+
+        th,
+        td {
+            border: 1px solid #000000;
+            padding: 0.8rem;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+    th {
+        font-size: 1.2rem;
+        text-align: center;
+    }
+
+    th:nth-child(1) {
+        width: 20%;
+    }
+
+    th:nth-child(3) {
+        width: 10%;
+    }
+
+    td:nth-child(3) {
+        word-break: break-word;
+    }
+
+    mark {
+        background-color: #fede00;
+    }
+
+
+    </style>
+
+{% endblock %}
+
+{% block content %}
+    {% load poll_extras %}
+
+    <div class="page-container">
+
+        <h1 class="main-heading">{{ section }}</h1>
+
+
+        <div class="search-field">
+            <i class="fas fa-search fa-lg icon"></i>
+            <input class="search-bar">
+        </div>
+
+        <table class="qna-table">
+            <thead>
+                <tr class="table-header">
+                    <th>Вопрос</th>
+                    <th>Ответ</th>
+                    <th>Ссылка на сайт</th>
+                </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
+
+    </div>
+
+
+
+{% endblock %}
+
+{% block js %}
+    <script>
+        let jsonData = {{ all_know | js }};
+        console.log(jsonData);
+        jsonData = JSON.parse(JSON.stringify(jsonData));
+
+
+        const table = document.querySelector('.qna-table');
+
+        const tableBody = document.querySelector('.qna-table tbody');
+        let activeTableRows;
+        let dataMap = new Map();
+
+        $(document).ready(function() {
+
+            jsonData.forEach(qna => {
+
+                dataMap.set(qna.id, qna);
+
+                const tableRowElement = document.createElement('tr');
+                tableRowElement.classList.add('qna');
+                tableRowElement.setAttribute('id', qna.id);
+
+                const tableCellQuestion = document.createElement('td');
+                tableCellQuestion.classList.add('search-question');
+                tableCellQuestion.innerText = qna.question;
+
+                const tableCellAnswer = document.createElement('td');
+                tableCellAnswer.classList.add('search-answer');
+                if(qna.answer != 'nan') {
+                    tableCellAnswer.innerText = qna.answer;
+                }
+
+                const tableCellRef = document.createElement('td');
+                tableCellRef.classList.add('search-link');
+                if(qna.reference_answer != 'nan') {
+                    const tableCellLink = document.createElement('a');
+                    tableCellLink.setAttribute('href', qna.reference_answer);
+                    tableCellLink.innerText = qna.reference_answer;
+                    tableCellRef.appendChild(tableCellLink);
+                }
+
+                tableRowElement.appendChild(tableCellQuestion);
+                tableRowElement.appendChild(tableCellAnswer);
+                tableRowElement.appendChild(tableCellRef);
+
+                tableBody.appendChild(tableRowElement);
+
+            });
+
+            activeTableRows = document.querySelectorAll('.qna');
+
+        });
+
+        const searchBar = document.querySelector('.search-bar');
+
+        searchBar.addEventListener('input', function () {
+            for(let i = 0; i < activeTableRows.length; i++) {
+                activeTableRows[i].style.display = '';
+                activeTableRows[i].cells[0].innerText = dataMap.get(+(activeTableRows[i].getAttribute('id'))).question;
+                activeTableRows[i].cells[1].innerText = dataMap.get(+(activeTableRows[i].getAttribute('id'))).answer;
+            }
+            if(searchBar.value.trim().length >= 3) {
+                startSearching();
+            }
+            else if(searchBar.value.trim().length == 0){
+                for(let i = 0; i < activeTableRows.length; i++) {
+                    activeTableRows[i].style.display = '';
+                    activeTableRows[i].cells[0].innerText = dataMap.get(+(activeTableRows[i].getAttribute('id'))).question;
+                    activeTableRows[i].cells[1].innerText = dataMap.get(+(activeTableRows[i].getAttribute('id'))).answer;
+                }
+            }
+        });
+
+        function searchFindingInCell(currRowElement, cellNumber, query, regexp) {
+            let origText;
+            let lineBreak = new RegExp('\n', 'g');
+            if(cellNumber == 0) origText = dataMap.get(+(currRowElement.getAttribute('id'))).question.replaceAll(lineBreak, '<br>');
+            else origText = dataMap.get(+(currRowElement.getAttribute('id'))).answer.replaceAll(lineBreak, '<br>');
+
+            let matchingArr = origText.toLowerCase().matchAll(regexp);
+            matchingArr = Array.from(matchingArr);
+            let startIndex = 0;
+
+            currRowElement.cells[cellNumber].innerHTML = '';
+            matchingArr.forEach(matching => {
+                let matchIndex = matching.index;
+                currRowElement.cells[cellNumber].innerHTML += origText.slice(startIndex, matchIndex) +
+                    '<mark>' + origText.slice(matchIndex, matchIndex + query.length) + '</mark>';
+                startIndex = matchIndex + query.length;
+            });
+            currRowElement.cells[cellNumber].innerHTML += origText.slice(startIndex);
+        }
+
+        function searchQuery(query) {
+            for(let i = 0; i < activeTableRows.length; i++) {
+                if(activeTableRows[i].cells[0].innerHTML.toLowerCase().indexOf(query) == -1 && activeTableRows[i].cells[1].innerHTML.toLowerCase().indexOf(query) == -1) {
+                    activeTableRows[i].cells[0].innerText = dataMap.get(+(activeTableRows[i].getAttribute('id'))).question;
+                    activeTableRows[i].cells[1].innerText = dataMap.get(+(activeTableRows[i].getAttribute('id'))).answer;
+                    activeTableRows[i].style.display = 'none';
+                }
+                else {
+                    activeTableRows[i].style.display = '';
+                    let regexp = new RegExp(`${query}.*?(\\s|\\p{P})`, 'gu');
+                    if(activeTableRows[i].cells[0].innerHTML.toLowerCase().indexOf(query) != -1) {
+                        let currRowElement = activeTableRows[i];
+                        let cellNumber = 0;
+                        searchFindingInCell(currRowElement, cellNumber, query, regexp);
+                    }
+                    if(activeTableRows[i].cells[1].innerHTML.toLowerCase().indexOf(query) != -1) {
+                        let currRowElement = activeTableRows[i];
+                        let cellNumber = 1;
+                        searchFindingInCell(currRowElement, cellNumber, query, regexp);
+                    }
+                }
+            }
+        }
+
+
+        function startSearching() {
+            let searchVal = searchBar.value.trim().toLowerCase();
+            searchQuery(searchVal);
+
+            /*let queryArr = searchVal.split(' ');
+            console.log(queryArr);
+            queryArr.forEach(query => {
+                if(query.length >= 3) searchQuery(query);
+            });*/
+
+        }
+
+    </script>
+{% endblock %}

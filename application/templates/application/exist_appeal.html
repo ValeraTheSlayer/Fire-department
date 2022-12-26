@@ -1,0 +1,239 @@
+<div class="modal fade" id="ExistedCallModal" tabindex="-1" aria-labelledby="ExistedCallModalLabel" aria-hidden="true"
+data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="row">
+          <h5 class="modal-title" id="ExistedCallModalLabel">Карточка №  {{ cur_appeal_modal.id }}</h5>
+      </div>
+
+        <button type="button" class="btn-close modal-close-btn" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="text-end" style="padding-right: 20px;padding-top: 10px;">
+        <a style="margin-right:20px;" href="/main_page/edit/{{ cur_appeal_modal.id }}/">Редактировать</a>
+        <a style="margin-right:20px;" href="/main_page/journal-event/{{ cur_appeal_modal.id }}/edit/">Журнал событий</a>
+        <a href="/main_page/close-emergency/{{ cur_appeal_modal.id }}/">Завершить заявку</a>
+      </div>
+      <div class="modal-body">
+
+      <form class="row g-3 ss" method="post" action="/main_page/edit/{{ cur_appeal_modal.id }}/">
+        {% csrf_token %}
+        <div class="col-md-4">
+          <label for="date_of_call_modal" class="form-label">Дата вызова</label>
+          <input type="text" class="form-control" id="date_of_call_modal" value="{{ cur_appeal_modal.date_of_call_start | date:"d/m/Y" }}" readonly>
+        </div>
+
+       <div class="col-md-4">
+          <label for="time_of_call_modal" class="form-label">Начало звонка</label>
+          <input type="time" class="form-control" id="time_of_call_modal" value="{{ cur_appeal_modal.date_of_call_start| date:"H:i:s" }}" readonly>
+        </div>
+        <div class="col-md-4">
+          <label for="time_of_call_end_modal" class="form-label">Конец звонка</label>
+          <input type="time" class="form-control" id="time_of_call_end_modal" value="{{ cur_appeal_modal.date_of_call_end| date:"H:i:s" }}" readonly>
+        </div>
+      <div class="col-md-6">
+          <label for="income_call_number_modal" class="form-label">Номер телефона заявителя</label>
+          <input type="text" class="form-control" id="income_call_number_modal" value="{{ cur_appeal_modal.income_call_number }}" readonly>
+        </div>
+        <div class="col-md-3" style="display:none;">
+          <label for="count_call_number_modal" class="form-label">Количество звонков клиента</label>
+            <div style="display: flex">
+              <input style="margin-right: 5px;" type="text" class="form-control" id="count_call_number_modal" value="{{ count_call_number_modal }}" readonly>
+              <button type="button" class="btn btn-primary" id="show_all_call_number">Посмотреть</button>
+            </div>
+        </div>
+
+
+        <div class="col-md-6">
+          <label for="income_call_name_modal" class="form-label">ФИО заявителя</label>
+          <input type="text" class="form-control" id="income_call_name_modal" value="{{ cur_appeal_modal.income_call_name }}" readonly>
+        </div>
+
+        <div class="col-11">
+            <label for="address_modal" class="form-label">Адрес</label>
+            <input id="address_modal"  class="form-control" name="address" type="text" size="50" value="{{ cur_appeal_modal.address }}" readonly>
+        </div>
+        <div class="col-1">
+            <label for="flat_modal" class="form-label">Кв.</label>
+            <input type="text" class="form-control" id="flat_modal" name="flat_modal" value="{%if cur_appeal_modal.flat %}{{ cur_appeal_modal.flat }}{%endif%}" {% if user.userinfo.operator%}readonly{% endif %}>
+          </div>
+          <div class="col">
+            <label for="borderpost" class="form-label">Тип выезда:</label>
+            <select class="form-select " id="emergency_type" name="emergency_type">     
+                {% for item in emergency_types %}                   
+                   <option value="{{item.id}}" selected="">{{item.name}}</option>                   
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col">
+          <label for="borderpost" class="form-label">Наименование объекта:</label>
+          <select class="form-select " id="object_category" name="object_category">                
+              {% for item in object_categories %}                   
+                 <option value="{{item.id}}" selected="">{{item.name}}</option>                   
+              {% endfor %}           
+          </select>
+      </div>
+      <div class="col-12">
+        <div class="row">
+            <div class="col-6">
+                <label for="borderpost" class="form-label">Ранг</label>
+                <select class="form-select " id="emergency_rank" name="emergency_rank">                    
+                    {% for item in emergency_ranks %}                   
+                    <option value="{{item.id}}" selected="">{{item.rank}}</option>                   
+                    {% endfor %}                       
+                </select>
+            </div>
+            <div class="col-6">
+                <label for="object_owner" class="form-label">Владелец объекта</label>
+              
+                <input type="text" class="form-control" id="object_owner" name="object_owner" value="{{cur_appeal_modal.object_owner}}">
+            </div>
+        </div>
+    </div> 
+    <div class="col-12">
+      <label for="department" class="form-label">Пожарная часть</label>
+      <select class="form-select select2_selection" id="department" name="department"  multiple="multiple" required>
+          {% for d in departaments %}
+             <option value="{{d.id}}" {% for d_select in cur_appeal_modal.department.all %}{% if d_select.id == d.id %}selected="selected"{% endif %}{% endfor %}>{{d}}</option>                   
+          {% endfor %}
+        
+      </select>
+
+
+  </div>    
+  <div class="col-12">
+    <label for="short_question_modal" class="form-label">Первичная информация по сообщению<</label>
+    <textarea class="form-control" id="short_question_modal" rows="3" readonly>{{ cur_appeal_modal.short_question }}</textarea>
+</div>
+  <div class="col-12">
+    <label for="responsible_department_person" class="form-label">Руководитель тушения пожара</label>
+    <select class="form-select select2_selection" id="transport" name="transport1">
+        <option value="">{{boss.staff}}</option>
+    </select>            
+</div>
+<div class="col-12">
+    <label for="transport" class="form-label">Силы и средства</label>
+    <select class="form-select select2_selection" id="transport" name="transport" multiple="multiple">                
+        {% for t in transport %}
+           <option value="{{ t.id }}" {%if forloop.counter == 1%}selected{% endif %}>{{ t }}</option>
+        {% endfor %}            
+ </select>
+</div>
+        <div class="col-md-2" style="display:none;">
+          <label for="iin_modal" class="form-label">ИИН клиента</label>
+          <input type="text" class="form-control" maxlength="12" id="iin_modal" name="iin_modal" value="{%if cur_appeal_modal.iin %}{{ cur_appeal_modal.iin }}{%endif%}" {% if user.userinfo.operator%}readonly{% endif %}>
+        </div>
+        <div class="col-md-3" style="display:none;">
+          <label for="email_modal" class="form-label">Адрес эл.почты</label>
+          <input type="text" class="form-control" id="email_modal" name="email_modal" value="{%if cur_appeal_modal.email %}{{ cur_appeal_modal.email }}{%endif%}" {% if user.userinfo.operator%}readonly{% endif %}>
+        </div>
+        <div class="col-md-3" style="display:none;">
+          <label for="callback_number_modal" class="form-label">Номер для обратной связи</label>
+          <input type="text" class="form-control" id="callback_number_modal" name="callback_number_modal" value="" {% if user.userinfo.operator%}readonly{% endif %}>
+        </div>
+
+        <div class="col-md-2" style="display:none;">
+            <label for="citizenship_modal" class="form-label">Гражданство</label>
+            <input type="text" class="form-control" id="citizenship_modal" name="citizenship_modal" value="{%if cur_appeal_modal.citizenship %}{{ cur_appeal_modal.citizenship }}{%endif%}" {% if user.userinfo.operator%}readonly{% endif %}>
+        </div>
+        <div class="col-md-5" style="display:none;">
+            <div class="row">
+                <div class="col">
+                    <label for="city_modal" class="form-label">Город</label>
+                    <input class="form-control" type="text" id="city_modal" name="city_modal" value="{%if cur_appeal_modal.city %}{{ cur_appeal_modal.city.name }}{%endif%}" readonly>
+                </div>
+                <div class="col">
+                    <label for="borderpost_modal" class="form-label">Пограничный пост</label>
+                    <input class="form-control" type="text" id="borderpost_modal" value="{{ cur_appeal_modal.borderpost.name }}" readonly>
+                </div>
+            </div>
+
+        </div>
+        <div class="col-md-5">
+          <div class="row" >
+
+              <div class="col-8" style="display:none;">
+                <label for="street_modal" class="form-label">Улица</label>
+                <input type="text" class="form-control" id="street_modal" name="street_modal" value="{%if cur_appeal_modal.street %}{{ cur_appeal_modal.street }}{%endif%}" {% if user.userinfo.operator%}readonly{% endif %}>
+              </div>
+              <div class="col-2" style="display:none;">
+                <label for="house_modal" class="form-label">Дом</label>
+                <input type="text" class="form-control" id="house_modal" name="house_modal" value="{%if cur_appeal_modal.house %}{{ cur_appeal_modal.house }}{%endif%}" {% if user.userinfo.operator%}readonly{% endif %}>
+              </div>
+
+          </div>
+        </div>
+
+        <div class="col-6" style="display:none;">
+            <label for="question_category_modal" class="form-label">Категория вопроса</label>
+            <input type="text" class="form-control" id="question_category_modal" value="{{ cur_appeal_modal.question_category.name }}" readonly>
+        </div>
+        <div class="col-6" style="display:none;">
+            <label for="operator_name_modal" class="form-label">ФИО оператора call центра</label>
+            <input type="text" class="form-control" id="operator_name_modal" value="{{ cur_appeal_modal.user_created_event.user.last_name }} {{ cur_appeal_modal.user_created_event.user.first_name }}" readonly>
+        </div>
+
+        {% if cur_appeal_modal.api_unique_id %}
+        <div style="display:none;">
+            <label class="form-label" for="audio-row">Аудио-запись разговора</label>
+            <div id="audio-row" class="modal-row">
+                <div class="audio-row-group" id="audio_exist_{{ cur_appeal_modal.api_unique_id }}">
+                    <audio controls>
+                      <source src="/static/audio/{{ cur_appeal_modal.api_unique_id }}.wav" type="audio/wav">
+                    </audio>
+                    <a href="/static/audio/{{ cur_appeal_modal.api_unique_id }}.wav"  class="btn btn-primary" style="margin: 10px;" download>Скачать</a>
+                </div>
+
+            </div>
+        </div>
+        {% endif %}
+
+
+
+        <div class="col-11">
+               {# Sorry I could not align the button to right#}
+        </div>
+        <div class="col-1" style="display:none;">
+            <!-- Button trigger modal -->
+            <p id="trans_button" class="fake_button" data-bs-toggle="modal" data-bs-target="#answer_to_short_question_modal">Ответ</p>
+        </div>
+        <div class="col-6" style="display:none;">
+            <label for="responsible_depart_modal" class="form-label">Уполномоченное подразделение</label>
+            <input type="text" class="form-control" id="responsible_depart_modal" value="{{ cur_appeal_modal.get_responsible_department_display }}" readonly>
+
+
+        </div>
+        <div class="col-6" style="display:none;">
+            <label for="responsible_department_person_modal" class="form-label">Ф.И.О. должностного лица</label>
+            <input type="text" class="form-control" name="responsible_department_person_modal" id="responsible_department_person_modal"
+            value="{% if cur_appeal_modal.responsible_department_person %}{{ cur_appeal_modal.responsible_department_person }}{% endif %}" required {% if user.userinfo.operator%}readonly{% endif %}>
+        </div>
+        {% if user.userinfo.operator == False %}
+        <div class="col-12">
+            <div class="d-grid gap-2">
+                <button class="btn btn-primary" type="submit">СОХРАНИТЬ КАРТОЧКУ ВОПРОС РЕШЕН</button>
+            </div>
+        </div>
+        {% endif %}
+        {# HIDDEN INPUT VALUES #}
+          <input type="hidden" name="answer_to_short_question" id="answer_to_short_question">
+          <input type="hidden" name="appeal_modal_id_is" id="appeal_modal_id_is" value="{{ cur_appeal_modal.id }}">
+      </form>
+      </div>
+      <div class="modal-footer">
+        
+        
+        
+        
+        <button type="button" class="btn btn-warning modal-close-btn" data-bs-dismiss="modal">Закрыть окно</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+    $(".save-changes").click(function(){
+        $(".ss").submit();
+    });
+</script>

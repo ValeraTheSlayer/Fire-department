@@ -1,0 +1,122 @@
+{% extends "application/0_index.html" %}
+
+{% block title %}Журнал событий{% endblock %}
+
+{% block content %}
+<button style="display: none;" id="EditEventShowButton" type="button" data-bs-toggle="modal" data-bs-target="#EditEvent">T</button>
+<button style="display: none;" id="DeleteEventShowButton" type="button" data-bs-toggle="modal" data-bs-target="#DeleteEvent">D</button>
+{% if not status == 'archive'%}
+<form method="post">
+{% csrf_token %}
+  <div class="input-group mb-3">
+
+    <input autofocus="autofocus" list="new_event_list" id="new_event" name="new_event" class="form-control" placeholder="Новое событие" required>
+    <span class="input-group-text" id="clear_new_event"><i class="far fa-times-circle"></i></span>
+    <datalist id="new_event_list">
+          {% for ev in default_events %}
+            <option value="{{ ev }}"></option>
+          {% endfor %}
+    </datalist>
+
+  </div>
+  <div style="margin-top: 15px; text-align: center;">
+  <button type="submit" class="btn btn-primary">Добавить</button>
+  </div>
+
+</form>
+{% endif %}
+<div class="row">
+<div class="col">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th style="width: 20%; text-align: center;">Время</th>
+                <th style="width: 60%">Событие</th>
+                {% if not status == 'archive'%}
+                <th style="width: 10%; text-align: center;">Редактировать</th>
+                <th style="width: 10%; text-align: center;">Удалить</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+        {% for event in event_list %}
+        <tr>
+            <td style="text-align: center;">{{ event.date_insert |date:"d/m/Y H:i:s"}}</td>
+            <td id="eventText_{{ event.id }}">{{ event.event }}</td>
+            {% if not status == 'archive'%}
+            <td style="text-align: center;"><a href="?edit={{ event.id }}"><i class="fas fa-pen"></i></a></td>
+            <td style="text-align: center; color: red;" class="deleteEditIcon" id="deleteEdit_{{ event.id }}"><i class="fas fa-trash"></i></td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+<!-- Modal -->
+<div class="modal fade" id="EditEvent" tabindex="-1" aria-labelledby="EditEventLabel" aria-hidden="true"
+data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="EditEventLabel">Редактировать</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+      <form class="row g-3" method="post" >
+        {% csrf_token %}
+          {{ form }}
+          <button type="submit" class="btn btn-primary">Сохранить</button>
+      </form>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-warning" data-bs-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal -->
+<div class="modal fade" id="DeleteEvent" tabindex="-1" aria-labelledby="DeleteEventLabel" aria-hidden="true"
+data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="DeleteEventLabel">Удалить</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+          <p id="EventDeleteText"></p>
+          <span>Удалить ?</span> <a class="btn btn-warning" href="#" role="button" id="DeleteEventButtonRequest">Да</a>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Нет</button>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+</div>
+{% endblock %}
+{% block js %}
+    <script>
+    $(document).ready(function(){
+        $('.deleteEditIcon').click(function (){
+            const eventId = $(this).attr('id').split('_')[1];
+            const eventText = $('#eventText_' + eventId).text();
+            $('#EventDeleteText').text(eventText);
+            $('#DeleteEventButtonRequest').attr('href','?delete='+eventId);
+            $('#DeleteEventShowButton').click();
+
+        });
+
+    // Clear Type Exit Input Field
+    {% if form %}
+        $('#EditEventShowButton').click();
+    {% endif %}
+    $('#clear_new_event').click(function (){
+        $('#new_event').val('');
+    });
+    });
+    </script>
+{% endblock %}

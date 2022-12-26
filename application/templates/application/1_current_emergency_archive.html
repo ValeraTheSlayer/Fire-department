@@ -1,0 +1,779 @@
+{% extends "application/0_index.html" %}
+{% load widget_tweaks %}
+{% load static %}
+{% block title %}Все выезда{% endblock %}
+{%block header_link%}
+
+<script type="text/javascript" src="{% static 'javascript/moments/moment.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'javascript/daterangepicker/daterangepicker.min.js' %}"></script>
+<link rel="stylesheet" type="text/css" href="{% static 'javascript/daterangepicker/daterangepicker.css' %}" />
+<link href="{% static 'javascript/select2/select2.min.css' %}" rel="stylesheet" />
+<script src="{% static 'javascript/select2/select2.min.js' %}"></script>
+{% endblock %}
+{% block style %}
+    <style>
+
+        td {
+            width: 50%;
+        }
+        .modal {
+            z-index: 20;
+        }
+        .modal-backdrop {
+            z-index: 10;
+        }
+        .select2 {
+            width:100%!important;
+        }
+        .select2-selection__rendered {
+            line-height: 31px !important;
+        }
+        .select2-container .select2-selection--single {
+            height: 35px !important;
+        }
+        .select2-selection__arrow {
+            height: 34px !important;
+        }
+        .select2-results__option--selected {
+          background: #6c757d;
+        }
+        .fake_button{
+            display: inline-block;
+            background: #007bff;
+            border-radius: 4px;
+            color: #FFF;
+            padding: 8px 12px;
+            cursor: pointer;
+
+        }
+        .appeal_list {
+          padding: 15px 0;
+          border: solid 1px #555;
+          box-shadow:  3px 3px  5px  rgba(0,0,0,0.6);
+          -moz-box-shadow:  3px 3px  5px  rgba(0,0,0,0.6);
+          -webkit-box-shadow:  3px 3px  5px  rgba(0,0,0,0.6);
+          -o-box-shadow:  3px 3px 5px  rgba(0,0,0,0.6);
+          border-radius: 8px;
+        }
+        .appeal_list:hover {
+          cursor: pointer;
+          background-color: #c7c6c3;
+          box-shadow:  0 0 10px  rgba(0,0,0,0.6);
+          -moz-box-shadow:  0 0 10px  rgba(0,0,0,0.6);
+          -webkit-box-shadow:  0 0 10px  rgba(0,0,0,0.6);
+          -o-box-shadow:  0 0 10px  rgba(0,0,0,0.6);
+        }
+        .appeal_content {
+            padding: 5px;
+            color: #52bfe3;
+            font-weight: bold;
+        }
+
+    .modal {
+        overflow: auto;
+    }
+
+    .scroll-hidden {
+        overflow-y: hidden;
+    }
+
+    #new_income_button_modal,
+    .btn-filter-form {
+        text-transform: uppercase;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-row-flex {
+        display: flex;
+        column-gap: 1rem;
+    }
+
+    .form-row-flex col {
+        flex: 1;
+    }
+
+    .modal-row {
+        display: flex;
+    }
+
+    .audio-row-group {
+        display: flex;
+        flex: 1;
+    }
+
+    .audio-row-group audio {
+        flex: 1;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    #new_income_button_modal {
+        width: fit-content;
+    }
+
+    .audio-row-group {
+        column-gap: 1rem;
+    }
+
+    .form-error-field {
+        height: min-content;
+    }
+
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    @media screen and (max-width: 1600px) {
+        .date-start-field,
+        .date-end-field {
+            width: 100%;
+        }
+
+        .form-row-flex .col:first-child {
+            margin-bottom: 1rem;
+        }
+
+        .form-row-flex {
+            height: max-content;
+            flex-direction: column;
+        }
+    }
+
+    </style>
+
+{% endblock %}
+{% block content %}
+
+<div class="row">
+  <div class="table-container col-9">
+    <div class="new-income-btn">
+        <div class="d-grid gap-2" style="margin-bottom:24px;">
+         
+             {% if user.userinfo.operator == True and request.path == '/main_page/current-emergencies/'   %}
+                <!-- Button trigger modal -->
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#NewCallModal" id="new_income_button_modal">
+                  <i class="fas fa-plus"></i> Новое обращение
+                </button>
+            {% endif %}
+            {% if request.path == '/main_page/archive/' %}
+                <a href="/main_page/report-excel/" class="btn btn-primary" style="width:100px;">Отчет</a>
+            {% endif %}    
+          </div>
+    </div>
+  </div>
+</div>
+
+{% if user.userinfo.operator == True %}
+    {% include 'application/new_appeal.html' %}
+{% endif %}
+
+
+<div class="row">
+  
+<div class="col">
+<form method="get">
+    <div class="mb-3">
+        <label for="dateRangeFilter" class="form-label">Время</label>
+        <input type="text" class="form-control" id="dateRangeFilter" name="dateRangeFilter">
+    </div>
+    {{ filter.form.department.label_tag }}
+    {% render_field filter.form.department class="form-select" %}
+    <div style="text-align: center; margin: 15px;">
+        <button type="submit" class="btn btn-secondary">Фильтр</button>
+    </div>
+  </form>
+<div class="accordion" id="list_of_current_calls">
+    {% for emergency in filter.qs %}
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="emergency_{{forloop.counter}}">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_{{forloop.counter}}" aria-expanded="false" aria-controls="collapse_{{forloop.counter}}">
+              <span class="col"><span class="fw-bold text-muted">Дата пожара: </span>{{emergency.date_of_call_start|date:"d/m/Y"}}<br>
+                  <span class="fw-bold text-muted">Город: </span>{{ user.userinfo.city.name}}</span>
+              <span class="col"><span class="fw-bold text-muted">Время поступление сообщение: </span>{{emergency.date_of_call_start|date:"H:i:s"}}<br>
+                  <span class="fw-bold text-muted">Адрес: </span>{{emergency.address}} / {{ emergency.house_kv }}</span>
+            <span class="col-2">
+                {% if emergency.status %}
+                <a class="btn btn-success">Закрыта</a>
+                {% else %}
+                <a class="btn btn-danger">Открыта</a>
+                {% endif %}
+            </span>
+          </button>
+        </h2>
+        <div id="collapse_{{forloop.counter}}" class="accordion-collapse collapse" aria-labelledby="emergency_{{forloop.counter}}" data-bs-parent="#list_of_current_calls">
+          <div class="accordion-body">
+            <table class="table table-striped table-hover table-borderless">
+              <tbody>
+
+                <tr>
+                    <td><span class="fw-bold text-muted">Запись звонка: </span></td>
+                    <td><a href="http://719440-cd43968.tmweb.ru/admin/images/records/{{ emergency.api_unique_id }}.wav"">Скачать</a></td>
+                </tr>                
+                <tr>
+                  <td><span class="fw-bold text-muted">Пожарная часть: </span></td>
+                  <td><span>{% for dep in emergency.department.all %}{{dep}}  <br>{% endfor %} </span></td>
+                </tr>
+                <tr>
+                  <td><span class="fw-bold text-muted">Категория пожара: </span></td>
+                  <td><span>{{ emergency.object_category }}</span></td>
+                </tr>
+                <tr>
+                  <td><span class="fw-bold text-muted">Тип вызда: </span></td>
+                  <td><span>{{ emergency.emergency_type }}</span></td>
+                </tr>
+                <tr>
+                  <td><span class="fw-bold text-muted">Ранг вызда: </span></td>
+                  <td><span>{{ emergency.emergency_rank }}</span></td>
+                </tr>
+                <tr>
+                  <td><span class="fw-bold text-muted">ФИО, номер тел.заявителя: </span></td>
+                  <td><span>{{emergency.income_call_name}}, {{emergency.income_call_number}}</span></td>
+                </tr>
+                <tr>
+                  <td><span class="fw-bold text-muted">Превлеченные силы и средства: </span></td>
+                  <td><span>{% for trans in emergency.transport.all %}{{trans.brand}}  <br>{% endfor %}</span></td>
+                </tr>
+                <tr>
+                  <td><span class="fw-bold text-muted">Руководитель тушение пожара: </span></td>
+                  <td><span>{{ emergency.responsible_department_person }}</span></td>
+                </tr>
+                <tr>
+                  <td><span class="fw-bold text-muted">Первичная информация: </span></td>
+                  <td>{{emergency.short_question}}</td>
+                </tr>
+                <tr>
+                    <td><span class="fw-bold text-muted">Журнал событий: </span></td>
+                    <td>
+                      
+                      {% if request.user.username == 'pozh' %}
+                      <a href="{% url 'journal_event' emergency.id 'archive' %}">Посмотреть</a>
+                      {% else %}
+                      <a href="{% url 'journal_event' emergency.id 'edit' %}">Редактировать</a><br>
+                      {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="fw-bold text-muted"> Отчет: </span></td>
+                    <td><a href="{% url 'download_report' emergency.id%}">Скачать</a></td>
+                </tr>
+                <tr>
+                  <td><span class="fw-bold text-muted"> Cтатус: </span></td>
+                  <td>
+                  {% if emergency.status %}
+                  Закрыт
+                  {% else %}
+                  Открыт <br>
+                  {% endif %}
+                  
+                  {% if not emergency.status and request.user.username == 'oper' %}
+              
+                  <a href="{% url 'close_emergency' emergency.id%}">Сохранить и закрыть</a>
+                  {% endif %}
+                </td>
+              </tr>
+              {% if request.user.username == 'oper' %}
+              <tr>
+                <td><span class="fw-bold text-muted">Редактировать: </span></td>
+                <td><a href="/main_page/edit/{{emergency.id}}/"">Редактировать</a></td>
+              {% endif %}
+            </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+</div>
+
+
+</div>
+</div>
+
+{% endblock %}
+
+{% block js %}
+    <script>
+    $(document).ready(function(){
+
+
+        $('#dateRangeFilter').daterangepicker({
+              timePicker: true,
+              timePicker24Hour: true,
+            {% if datetime_after or datetime_before %}
+              startDate: '{{ datetime_before|date:"d/m/Y H:i"}}',
+              endDate: '{{ datetime_after|date:"d/m/Y H:i"}}',
+            {% else %}
+              startDate: moment().subtract(24, 'hours'),
+              endDate: moment(),
+            {% endif %}
+              locale: {
+                format: 'DD/MM/YYYY HH:mm',
+                "applyLabel": "Ввод",
+                "cancelLabel": "Отмена",
+                "fromLabel": "От",
+                "toLabel": "До",
+                "daysOfWeek": [
+                     "Вс",
+                     "Пн",
+                     "Вт",
+                     "Ср",
+                     "Чт",
+                     "Пт",
+                     "Сб"
+                 ],
+                 "monthNames": [
+                     "Январь",
+                     "Февраль",
+                     "Март",
+                     "Апрель",
+                     "Май",
+                     "Июнь",
+                     "Июль",
+                     "Август",
+                     "Cентябрь",
+                     "Октябрь",
+                     "Ноябрь",
+                     "Декабрь"
+                 ],
+                "firstDay": 1
+
+              }
+          });
+    });
+
+
+
+
+    
+const host_name = window.location.hostname;
+{#console.log();#}
+let socketAddress = 'ws://'+ host_name +'/ws/income_call/{{ user.id }}/'
+let socket;
+{#console.log({{ user.id }});#}
+function download_report() {
+    document.getElementById('report_download').click();
+}
+
+$(document).ready(function() {
+
+    const urlSearchParams = new URLSearchParams(window.location.search);
+    const params = Object.fromEntries(urlSearchParams.entries());
+    console.log(params);
+
+
+    const dateStartGenerated = document.getElementById('id_date_0');
+    const dateEndGenerated = document.getElementById('id_date_1');
+    const dateStartLabel = document.querySelector('[for="id_date_0"]');
+
+// const dateStartField = document.querySelector('.date-start-field');
+// const dateEndField = document.querySelector('.date-end-field');
+
+// dateEndField.innerHTML = " ";
+// dateEndField.appendChild(dateEndGenerated);
+// dateStartField.innerHTML = "";
+// dateStartField.appendChild(dateStartLabel);
+// dateStartField.appendChild(dateStartGenerated);
+
+
+
+
+
+/*document.querySelector('.filter-form').addEventListener('submit', function (event) {
+    event.preventDefault();
+
+
+    document.getElementById('id_date_0').value = moment($('#id_date_0').datepicker("getDate")).format('YYYY-MM-DD HH:mm');
+        document.getElementById('id_date_1').value = moment($('#id_date_1').datepicker("getDate")).format('YYYY-MM-DD HH:mm');
+});*/
+
+
+
+$(function() {
+  $('#id_date_0').daterangepicker({
+      timePicker: true,
+      timePicker24Hour: true,
+      timePickerIncrement: 30,
+      singleDatePicker: true,
+      showDropdowns: true,
+      minYear: 2020,
+      maxYear: parseInt(moment().format('YYYY'), 10),
+
+      maxDate: moment().format('YYYY-MM-DD 23:30:00'),
+      startDate: moment().subtract(1,'days').startOf('hour'),
+      locale: {
+        format: 'YYYY-MM-DD HH:mm',
+        "applyLabel": "Ввод",
+        "cancelLabel": "Отмена",
+        "fromLabel": "От",
+        "toLabel": "До",
+        "daysOfWeek": [
+             "Вс",
+             "Пн",
+             "Вт",
+             "Ср",
+             "Чт",
+             "Пт",
+             "Сб"
+         ],
+         "monthNames": [
+             "Январь",
+             "Февраль",
+             "Март",
+             "Апрель",
+             "Май",
+             "Июнь",
+             "Июль",
+             "Август",
+             "Cентябрь",
+             "Октябрь",
+             "Ноябрь",
+             "Декабрь"
+         ],
+        "firstDay": 1
+
+      }
+  });
+  $('#id_date_1').daterangepicker({
+    timePicker: true,
+    timePicker24Hour: true,
+      timePickerIncrement: 30,
+    singleDatePicker: true,
+      showDropdowns: true,
+      minYear: 2020,
+      maxYear: parseInt(moment().format('YYYY'), 10),
+
+      maxDate: moment().format('YYYY-MM-DD 23:30:00'),
+    startDate: moment().add(1,'minutes'),
+    locale: {
+      format: 'YYYY-MM-DD HH:mm',
+
+      {#    {#}
+      {#    toDisplay: function () {#}
+      {#      return 'YYYY-MM-DD HH:mm';#}
+      {#    },#}
+      {#    toValue: function() {#}
+      {#        return 'YYYY-MM-DD HH:mm';#}
+      {#    },#}
+      "applyLabel": "Ввод",
+      "cancelLabel": "Отмена",
+      "fromLabel": "От",
+      "toLabel": "До",
+      "daysOfWeek": [
+            "Вс",
+            "Пн",
+            "Вт",
+            "Ср",
+            "Чт",
+            "Пт",
+            "Сб"
+        ],
+        "monthNames": [
+            "Январь",
+            "Февраль",
+            "Март",
+            "Апрель",
+            "Май",
+            "Июнь",
+            "Июль",
+            "Август",
+            "Cентябрь",
+            "Октябрь",
+            "Ноябрь",
+            "Декабрь"
+        ],
+      "firstDay": 1
+
+    }
+});
+});
+
+
+const outterContainer = document.querySelector('.main-page-container');
+
+function addBtnListeners() {
+    const modalCloseBtns = document.querySelectorAll('.modal-close-btn');
+
+    for(let i = 0; i < modalCloseBtns.length; i++) {
+        modalCloseBtns[i].addEventListener('click', () => {
+            outterContainer.classList.remove('scroll-hidden');
+        });
+    }
+}
+
+{% if cur_appeal_modal %}
+    $('#ExistedCallModal').modal('show');
+    outterContainer.classList.add('scroll-hidden');
+    addBtnListeners();
+
+
+    // /* Format phone number field */
+
+    // {% if cur_appeal_modal.income_call_number %}
+    //     let incomePhoneNumber = {{ cur_appeal_modal.income_call_number }};
+    //     incomePhoneNumber = incomePhoneNumber.toString();
+    //     if(incomePhoneNumber.startsWith('8')) {
+    //         document.getElementById('income_call_number_modal').value = incomePhoneNumber[0] + ' (' + incomePhoneNumber.substr(1, 3) + ') '
+    //             + incomePhoneNumber.substr(4, 3) + '-' + incomePhoneNumber.substr(7);
+    //     }
+    //     else {
+    //         document.getElementById('income_call_number_modal').value = '+' + incomePhoneNumber[0] + ' (' + incomePhoneNumber.substr(1, 3) + ') '
+    //             + incomePhoneNumber.substr(4, 3) + '-' + incomePhoneNumber.substr(7);
+    //     }
+    // {% endif %}
+
+    // {%if cur_appeal_modal.callback_number %}
+    //     let callbackPhoneNumber = {{ cur_appeal_modal.callback_number }};
+    //     callbackPhoneNumber = callbackPhoneNumber.toString();
+    //     if(callbackPhoneNumber.startsWith('8')) {
+    //         document.getElementById('callback_number_modal').value = callbackPhoneNumber[0] + ' (' + callbackPhoneNumber.substr(1, 3) + ') '
+    //             + callbackPhoneNumber.substr(4, 3) + '-' + callbackPhoneNumber.substr(7);
+    //     }
+    //     else {
+    //         document.getElementById('callback_number_modal').value = '+' + callbackPhoneNumber[0] + ' (' + callbackPhoneNumber.substr(1, 3) + ') '
+    //             + callbackPhoneNumber.substr(4, 3) + '-' + callbackPhoneNumber.substr(7);
+    //     }
+
+    // {%endif%}
+
+{% endif %}
+ //CLICK DIV APPEAL TO OPEN MODAL
+$("div[id^=appeal_]").click(function (){
+    $('#appeal_input_id').val(this.id);
+    $('#appeal_form').submit();
+});
+$.fn.modal.Constructor.prototype._enforceFocus = function() {};
+$('.select2_selection').select2({
+    placeholder:  'Выберите',
+    theme: "classic"
+});
+$('#emergency_rank').select2({
+    minimumResultsForSearch: Infinity
+});
+$('.select2_selection').val('').trigger('change');
+
+
+{% if user.userinfo.operator == True %}
+
+
+
+// SEND APPEAR/PROBLEM TO DEPARTMENT
+$('#send_to_department_problem').click(function (){
+    $('#status').val('False');
+});
+
+$('#new_income_button_modal').click(function (){
+    let date = new Date().toLocaleString('ru-RU');
+    let currentDate = date.substring(0,10);
+    let currentTime = date.substring(12,20);
+    document.getElementById('time_of_call_end').value = '';
+    document.getElementById('time_of_call').value = currentTime;
+    document.getElementById('date_of_call').value = currentDate;
+});
+
+function ws_connection() {
+    socket = new WebSocket(socketAddress);
+
+    socket.onopen = function () {
+        console.log('Connected to websocket open');
+    }
+
+    socket.onmessage = function (event) {
+        let income_call = JSON.parse(event.data);
+        console.log(income_call);
+        if (income_call['api']===1){
+            let newIncomeNumber = income_call['number_in'];
+            newIncomeNumber = newIncomeNumber.toString();
+            let callFieldValue;
+            callFieldValue = newIncomeNumber;
+
+            // if(newIncomeNumber.startsWith('8')) {
+            //      callFieldValue = newIncomeNumber[0] +
+            //         ' (' + newIncomeNumber.substr(1, 3) + ') ' + newIncomeNumber.substr(4, 3) + '-' + newIncomeNumber.substr(7);
+            // }
+            // else {
+            //     callFieldValue = '+' + newIncomeNumber[0] +
+            //         ' (' + newIncomeNumber.substr(1, 3) + ') ' + newIncomeNumber.substr(4, 3) + '-' + newIncomeNumber.substr(7);
+            // }
+            //console.log(income_call['number_in'], income_call['unique_id'], income_call['data_for_number_in']);
+            $('#current_emergency_form').on("submit", function (e) {
+                e.preventDefault();
+                let formModal = $(this);
+                $('#income_call_number').val(income_call['number_in']);
+                let callbackNumber = document.getElementById('callback_number').value;
+                if (callbackNumber != '') {
+                    document.getElementById('callback_number').value = callbackNumber[1] +
+                        callbackNumber.substr(4, 3) + callbackNumber.substr(9, 3) + callbackNumber.substr(13);
+                }
+                $('#current_emergency_form').off("submit");
+                formModal.submit();
+            });
+            // Start modal
+            if ($('#NewCallModal').is(':visible')) {
+                document.querySelector('#income_call_number').value = callFieldValue;
+                document.querySelector('input[name="new_income_when_model_open"]').value = callFieldValue;
+                //$("input[name='new_income_when_model_open']").val(income_call['number_in']);
+
+                $('#current_emergency_form').submit();
+
+            };
+            $('#NewCallModal').modal('show');
+            // Income call number
+            document.querySelector('#income_call_number').value = callFieldValue;
+            //$('#income_call_number').val(income_call['number_in']);
+            //$('#income_call_number').attr('readonly', true);
+            $('#api_unique_id').val(income_call['unique_id']);
+
+            if (income_call['data_for_number_in']) {
+                $('#income_call_name').val(income_call['data_for_number_in']['income_call_name']);
+                $('#iin').val(income_call['data_for_number_in']['iin']);
+                $('#short_question').val(income_call['data_for_number_in']['short_question']);
+                $('#count_call_new_appeal').val(income_call['count_call_new_appeal']);
+                //document.getElementById('div_count_call_new_appeal').style.display = 'block';
+            } else {
+                document.getElementById('div_count_call_new_appeal').style.display = 'none';
+                $('#income_call_name').val('');
+                $('#iin').val('');
+                $('#short_question').val('');
+                $('#count_call_new_appeal').val('');
+            }
+
+            let date = new Date().toLocaleString('ru-RU');
+            let currentDate = date.substring(0,10);
+            let currentTime = date.substring(12,20);
+            document.getElementById('time_of_call_end').value = '';
+            document.getElementById('time_of_call').value = currentTime;
+            document.getElementById('date_of_call').value = currentDate;
+
+        } else if (income_call['api']===2){
+
+            console.log('here we are api 2')
+            //console.log(income_call['unique_id'])
+            let date = new Date().toLocaleString('ru-RU');
+            //let currentDate = date.substring(0,10);
+            let currentTime = date.substring(12,20);
+            document.getElementById('time_of_call_end').value = '';
+            document.getElementById('time_of_call_end').value = currentTime;
+            //document.getElementById('time_of_call_end').value = income_call['end_time'];
+        }
+    };
+
+    socket.onclose = function (event) {
+        console.log('Connection interrupted', event);
+        setTimeout(function() {
+          ws_connection();
+        }, 1000);
+    };
+
+    socket.onerror = function(err) {
+        console.error('Socket encountered error: ', err.message, 'Closing socket');
+        ws.close();
+    };
+}
+
+ws_connection();
+
+{% else %}
+// USER IS NOT OPERATOR DEPARTMENT PERSON
+
+    $('#save_answer_to_short_question').click(function (){
+            let modal_var = $('#answer_to_short_question_modal_value').val();
+            //console.log(modal_var);
+            $('#answer_to_short_question').val(modal_var);
+    });
+
+{% endif %}
+
+const btn_show_all_call = document.getElementById('show_all_call_number');
+if (btn_show_all_call) {
+    function search_calls_number() {
+        let incomeCallNumber = document.getElementById('income_call_number_modal').value;
+        if(incomeCallNumber.startsWith('8')) {
+            document.getElementById('id_income_call_number').value = incomeCallNumber[0] +
+                        incomeCallNumber.substr(3, 3) + incomeCallNumber.substr(8, 3) + incomeCallNumber.substr(12);
+        }
+        else {
+            document.getElementById('id_income_call_number').value = incomeCallNumber[1] +
+                        incomeCallNumber.substr(4, 3) + incomeCallNumber.substr(9, 3) + incomeCallNumber.substr(13);
+        }
+        document.getElementById('id_date_0').value = '';
+        document.getElementById('id_date_1').value = '';
+        document.getElementById('search_filter').click();
+    }
+    btn_show_all_call.addEventListener("click", search_calls_number);
+}
+
+const btn_show_all_call_new_appeal = document.getElementById('show_all_call_number_new_appeal');
+if (btn_show_all_call_new_appeal) {
+    function search_calls_number_new_appeal() {
+        let incomeCallNumber = document.getElementById('income_call_number').value;
+        if(incomeCallNumber.startsWith('8')) {
+            document.getElementById('id_income_call_number').value = incomeCallNumber[0] +
+                        incomeCallNumber.substr(3, 3) + incomeCallNumber.substr(8, 3) + incomeCallNumber.substr(12);
+        }
+        else {
+            document.getElementById('id_income_call_number').value = incomeCallNumber[1] +
+                        incomeCallNumber.substr(4, 3) + incomeCallNumber.substr(9, 3) + incomeCallNumber.substr(13);
+        }
+        document.getElementById('id_date_0').value = '';
+        document.getElementById('id_date_1').value = '';
+        document.getElementById('search_filter').click();
+    }
+    btn_show_all_call_new_appeal.addEventListener("click", search_calls_number_new_appeal);
+}
+
+if(params.income_call_number != '' && typeof(params.income_call_number) != 'undefined') {
+    let filterFormPhone = params.income_call_number;
+    if(filterFormPhone.startsWith('8')) {
+        document.querySelector('#income_call_number_display').value = filterFormPhone[0] + ' (' + filterFormPhone.substr(1, 3) + ') ' +
+            filterFormPhone.substr(4, 3) + '-' + filterFormPhone.substr(7);
+    }
+    else {
+        document.querySelector('#income_call_number_display').value = '+' + filterFormPhone[0] + ' (' + filterFormPhone.substr(1, 3) + ') ' +
+            filterFormPhone.substr(4, 3) + '-' + filterFormPhone.substr(7);
+    }
+}
+
+// document.querySelector('#search_filter').addEventListener('click', function () {
+//     document.getElementById('id_income_call_number').value = '';
+// });
+
+$('#filter-form').on("submit", function (e) {
+    e.preventDefault();
+    let filterForm = $(this);
+    let phoneStr = document.getElementById('income_call_number_display').value;
+    let phoneStrHidden = document.getElementById('id_income_call_number').value;
+    //console.log('phonestr', phoneStr);
+    if(phoneStr == '' && phoneStrHidden == '') {
+        document.querySelector('.filter-form-phone').value = '';
+    }
+    else if(phoneStr != '' && phoneStrHidden == '') {
+        if(phoneStr.startsWith('8')) {
+            document.querySelector('.filter-form-phone').value = phoneStr[0] +
+                        phoneStr.substr(3, 3) + phoneStr.substr(8, 3) + phoneStr.substr(12);
+        }
+        else {
+            document.querySelector('.filter-form-phone').value = phoneStr[1] +
+                        phoneStr.substr(4, 3) + phoneStr.substr(9, 3) + phoneStr.substr(13);
+        }
+    }
+
+    $('#filter-form').off("submit");
+    filterForm.submit();
+
+});
+
+
+})
+
+//filter-form-phone
+    </script>
+{% endblock %}
+

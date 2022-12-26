@@ -1,0 +1,395 @@
+{% extends "application/0_index.html" %}
+
+{% block title %}Строевая записка{% endblock %}
+
+{% block content %}
+        <div class="row text-center">
+        {% if perms.application.user_main_call_center_city %}
+            <h3> Сил и средств противопожарной службы города {{ userinfo.city.name }} на <span>{{ date_insert }}</span></h3>
+        {% elif perms.application.user_fire_department_call_center %}
+            <h3> Сил и средств {{ userinfo.department.unique_id }} города {{ userinfo.city.name }} на <span>{{ date_insert }}</span></h3>
+        {% endif %}
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                {% if warning %}
+                 <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                  <strong>{{ warning }}!</strong>
+                </div>
+                {% endif %}
+                <button style="margin: 15px 0 15px 0;" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add_new_fire_fighter">
+                  Добавить нового сотрудника
+                </button>
+                <button style="margin: 15px 0 15px 0;" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#today_fighter">
+                  Личный состав на {{ date_insert }}
+                </button>
+                <select id="staff_sentry_select" name="staff_sentry_select" class="form-select" aria-label="Выберите должность" >
+                    <option value="0" selected>---</option>
+                    {% for kar in  karaul %}
+                        <option value="{{kar.id}}" >{{ kar }}</option>
+                   {% endfor % %}
+                 </select>
+                <table class="table align-middle table-hover">
+                  <thead>
+                    <tr>
+
+                      <th scope="col">Должность</th>
+                      <th scope="col">ФИО</th>
+                      <th scope="col">Примечение</th>
+                      <th scope="col">Караул</th>
+                      <th scope="col">ГДЗС</th>
+                      <th scope="col"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+
+                  {% for staff_member in all_staff %}
+                  <tr class = "staff_person" style="display: none;">
+                      <td aria-label="Выберите должность" id="selected_position">
+                        {% for pos in  positions %}
+                          {% if pos.id == staff_member.position_id %}
+                            <option value="{{ pos.id }}" selected>{{ pos.name }}</option>
+                          {% endif %}
+                        {% endfor % %}
+                      </td>
+                      <td aria-label="Выберите сотрудника" id="selected_person">
+                            {% for staff_pers in  staff_members_base %}
+                              {% if staff_member.full_name == staff_pers.full_name %}
+                                <option value="{{staff_pers.id}}" selected>{{ staff_pers.full_name | upper }}</option>
+                              {% endif %}
+                            {% endfor %}
+                      </td>
+                      <td>
+                         <select class="form-select" aria-label="Примечение" id="selected_status">
+                            <option value="None" selected>----</option>
+                            {% for st in  status %}
+                                <option value="{{st.id}}" >{{ st.status }}</option>
+                            {% endfor % %}
+                          </select>
+                      </td>
+                      <td aria-label="Караул" id="selected_sentry">
+                             {% for kar in  karaul %}
+                                 {% if kar.id == staff_member.sentry_id  %}
+                                    <option value="{{kar.id}}" selected>{{ kar }}</option>
+                                 {% endif %}
+                            {% endfor %}
+
+                      </td>
+                      <td>
+                          {% if staff_member.gdzs == 1 %}
+                            <input class="form-check-input" type="checkbox" value="True" checked id="selected_gdzs">
+                          {% else %}
+                            <input class="form-check-input" type="checkbox" value="False" id="selected_gdzs">
+                          {% endif %}
+                      </td>
+                  </tr>
+                  {% endfor %}
+                  </tbody>
+                </table>
+
+                <form method="post" id="selected_form_submit" style="display: none;">
+                    {% csrf_token %}
+                    <input type="text" name="selected_position">
+                    <input type="text" name="selected_person">
+                    <input type="text" name="selected_status">
+                    <input type="text" name="selected_gdzs">
+                </form>
+            <div style="text-align: center;">
+            <button type="button" class="btn btn-primary" id="add_row_button">Добавить</button>
+            </div>
+
+            </div>
+            <div class="col-md-12">
+                <button style="margin: 15px 0 15px 0;" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add_new_transport">
+                  Добавить новую технику
+                </button>
+                <table class="table align-middle table-hover">
+                  <thead>
+                    <tr>
+                      <th scope="col">Марка</th>
+                      <th scope="col">Тип</th>
+                      <th scope="col">Модель</th>
+                      <th scope="col">Рег. номер</th>
+                      <th scope="col">Примечение</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  {% if line_note_transport %}
+                      {% for line_note in line_note_transport %}
+                        <tr>
+                            <td>{{ line_note.transport.brand }}</td>
+                            <td>{{ line_note.transport.type }}</td>
+                            <td>{{ line_note.transport.trans_model }}</td>
+                            <td>{{ line_note.transport.new_number }}</td>
+                            <td>
+                              <select class="form-select selected_trans_status" aria-label="Примечение" id="selectedTransStatus_{{ line_note.transport.id }}">
+                                <option value="None" selected>В расчете</option>
+                                {% for st in  trans_status %}
+                                    <option value="{{st.id}}" {%if st == line_note.trans_status %}selected{% endif %}>{{ st.status }}</option>
+                                {% endfor % %}
+                              </select>
+                            </td>
+                        </tr>
+                      {% endfor %}
+                   {% else %}
+                      {% for tran in transports %}
+                        <tr>
+                            <td>{{ tran.brand }}</td>
+                            <td>{{ tran.type }}</td>
+                            <td>{{ tran.trans_model }}</td>
+                            <td>{{ tran.new_number }}</td>
+                            <td>
+                              <select class="form-select selected_trans_status" aria-label="Примечение" id="selectedTransStatus_{{ tran.id }}">
+                                <option value="None" selected>В расчете</option>
+                                {% for st in  trans_status %}
+                                    <option value="{{st.id}}" >{{ st.status }}</option>
+                                {% endfor % %}
+                              </select>
+                            </td>
+                        </tr>
+                      {% endfor %}
+                  {% endif %}
+                  </tbody>
+                </table>
+            <form method="post" id="selected_trans_form" style="display: none;">
+                    {% csrf_token %}
+                    <input type="text" name="selected_trans_status">
+            </form>
+            <div style="text-align: center;">
+               <button type="button" class="btn btn-primary" id="save_changes_trans">Сохранить</button>
+            </div>
+        </div>
+
+
+        <!-- Modal ADD NEW FIRE FIGHTER-->
+        <div class="modal fade" id="add_new_fire_fighter" tabindex="-1" aria-labelledby="addNewFireFighterLabel" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="addNewFireFighterLabel">Добавить нового сотрудника</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <div class="row">
+                    <div class="col">
+                        <form method="post">
+                        {% csrf_token %}
+                        <label for="staff_unique_id" class="col-form-label">Введите ИИН нового сотрудника</label>
+                        <input id="staff_unique_id" type="text" class="form-control" maxlength="12" name="staff_unique_id" required>
+                        <label for="staff_full_name" class="col-form-label">Введите ФИО нового сотрудника</label>
+                        <input id="staff_full_name" name="staff_full_name" type="text" class="form-control" required>
+                        <label for="staff_position" class="col-form-label">Выберите должность нового сотрудника</label>
+                        <select id="staff_position" name="staff_position" class="form-select" aria-label="Выберите должность"  >
+                           {% for pos in  positions %}
+                                <option value="{{pos.id}}" >{{ pos.name }}</option>
+                           {% endfor % %}
+                         </select>
+                        <label for="staff_karaul" class="col-form-label">Выберите караул нового сотрудника</label>
+                        <select id="staff_karaul" name="staff_karaul" class="form-select" aria-label="Выберите должность"  >
+
+                           {% for kar in  karaul %}
+                             {% if not kar.main_position %}
+                                 <option value="{{kar.id}}" >{{ kar }}</option>
+                             {% endif %}
+
+                           {% endfor % %}
+                         </select>
+                        <label for="staff_gdzs" class="col-form-label">Имеет доступ к ГДЗС</label>
+                        <select id="staff_gdzs" name="staff_gdzs" class="form-select" aria-label="Имеет доступ к ГДЗС"  >
+                           <option value="True" selected>ДА</option>
+                            <option value="False" >НЕТ</option>
+                         </select>
+                            <div style="text-align: center; margin-top: 15px;">
+                            <button type="submit" class="btn btn-primary">Сохранить</button>
+                            </div>
+
+                        </form>
+
+                    </div>
+                </div>
+              </div>
+
+
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Modal line man for today-->
+        <div class="modal fade bd-example-modal-lg" id="today_fighter" tabindex="-1" aria-labelledby="today_fighter" aria-hidden="true">
+          <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="today_fighterLabel">Личный состав на {{ date_insert }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <div class="row">
+                    <div class="col">
+                        <div class="col-md-12">
+
+                            <table class="table align-middle table-hover">
+                              <thead>
+                                <tr>
+                                  <th scope="col">Должность</th>
+                                  <th scope="col">ФИО</th>
+                                  <th scope="col">Примечение</th>
+                                  <th scope="col">ГДЗС</th>
+                                  <th scope="col"></th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {% for staff_today in line_note_staff_base %}
+                                    <tr>
+                                        <td>
+                                            {%for pos in positions %}
+                                                {% if staff_today.position_id == pos.id %}
+                                                    {{ pos.name }}
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                        <td>
+                                            {% for person in all_staff %}
+                                                {% if staff_today.staff_id == person.id %}
+                                                    {{ person.full_name|upper }}
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                        <td>
+                                            {% for st in status %}
+                                                {% if st.id == staff_today.status_id %}
+                                                    {{ st.status }}
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                        <td>
+                                            {% if staff_today.gdzs %}
+                                                <i class="fas fa-plus"></i>
+                                            {% else %}
+                                                <i class="fas fa-minus"></i>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                              </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                </div>
+              </div>
+
+
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Modal ADD NEW TRANSPORT-->
+        <div class="modal fade" id="add_new_transport" tabindex="-1" aria-labelledby="addNewTransportLabel" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="addNewTransportLabel">Добавить новую технику</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <div class="row">
+                    <div class="col">
+                        <form method="post">
+                        {% csrf_token %}
+                            {{ transform.as_p }}
+                            <div style="text-align: center; margin-top: 15px;">
+                            <button type="submit" class="btn btn-primary">Сохранить</button>
+                            </div>
+
+                        </form>
+
+                    </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+
+              </div>
+            </div>
+          </div>
+        </div>
+   </div>
+{% endblock %}
+{% block js %}
+    <script>
+    $(document).ready(function(){
+        // SET DISPLAY NONE HIDE DEPARTMENT AND SET DEFAULT USER DEPARTMENT ID
+        $('#id_department').hide();
+        $("label[for='id_department']").hide();
+        {#console.log({{ user.userinfo.department.id }});#}
+        $('#id_department option[value="{{ user.userinfo.department.id }}"]').attr("selected", "selected");
+        // GET ALL STATUS OF TRANSPORT
+        $('#save_changes_trans').click(function (){
+            let arr = $('select.selected_trans_status').map(function(){
+                  return (this.id.split('_')[1] +'|'+ this.value)
+              }).get();
+            console.log(arr);
+            $('input[name="selected_trans_status"]').val(arr);
+            $('#selected_trans_form').submit();
+
+        });
+
+$('#add_row_button').click(function (){
+        const person = document.querySelectorAll(".staff_person");
+        const result_arr = []
+        for (var i = 0 ; i<person.length; i++)
+        {
+            if (person[i].querySelector('#selected_sentry option:checked').value===$("#staff_sentry_select").val())
+            {
+
+                let selected_position = person[i].querySelector('#selected_position option:checked').value;
+                let selected_person = person[i].querySelector('#selected_person option:checked').value;
+                let selected_status = person[i].querySelector('#selected_status option:checked').value;
+                let selected_gdzs =  person[i].querySelector('#selected_gdzs').checked;
+
+                var one_person_inf = {"selected_position": selected_position,
+                                      "selected_person": selected_person,
+                                      "selected_status": selected_status,
+                                      "selected_gdzs": selected_gdzs}
+                result_arr.push(one_person_inf)
+            }
+        }
+        var jsonText = JSON.stringify(result_arr);
+        $.ajax({
+            type: "POST",
+            url: "",
+            dataType: "json",
+            data: { selected_position: jsonText,
+                   csrfmiddlewaretoken: '{{ csrf_token }}'
+                 }
+            });
+    })
+});
+
+
+$('#staff_sentry_select').change(function(){
+    if ($("#staff_sentry_select").val()!==0){
+        const person = document.querySelectorAll(".staff_person");
+        for (var i = 0 ; i<person.length; i++)
+            {
+                if (person[i].querySelector('#selected_sentry option:checked').value===$("#staff_sentry_select").val())
+                {
+                    person[i].style.display = '';
+                }
+                else
+                {  person[i].style.display = 'none'; }
+            }
+        }
+    });
+
+
+        //
+    </script>
+{% endblock %}

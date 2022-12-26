@@ -1,0 +1,48 @@
+{% extends "application/0_index.html" %}
+
+{% block title %}Строевая записка{% endblock %}
+
+{% block content %}
+<div class="row text-center">
+{% if perms.application.user_main_call_center_city %}
+    <h3> Сил и средств противопожарной службы города {{ userinfo.city.name }} на <span>{{ date_insert }}</span></h3>
+{% elif perms.application.user_fire_department_call_center %}
+    <h3> Сил и средств {{ userinfo.department.unique_id }} города {{ userinfo.city.name }} на <span>{{ date_insert }}</span></h3>
+{% endif %}
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+
+        <table class="table align-middle table-hover">
+          <thead>
+            <tr>
+              <th scope="col">Должность</th>
+              <th scope="col">ФИО</th>
+              <th scope="col">Примечение</th>
+              <th scope="col">Караул</th>
+              <th scope="col">ГДЗС</th>
+              <th scope="col"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for staff in staff_members_main %}
+                <tr>
+                    <td>{{ staff.position }}</td>
+                    <td>{{ staff.full_name|upper}}</td>
+                    <td>{% if staff.status %}{{ staff.status }}{% endif %}</td>
+                    <td>
+                      {% if staff.gdzs %}
+                         <i class="fas fa-plus"></i>
+                      {% else %}
+                         <i class="fas fa-minus"></i>
+                      {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+
+          </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

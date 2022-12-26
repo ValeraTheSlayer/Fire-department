@@ -1,0 +1,251 @@
+{% extends "application/0_index.html" %}
+{% load widget_tweaks %}
+{% load poll_extras %}
+{% load static %}
+{% block title %}База{% endblock %}
+{% block header_link %}
+<script type="text/javascript" src="{% static 'javascript/moments/moments.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'javascript/daterangepicker/daterangepicker.min.js' %}"></script>
+<link rel="stylesheet" type="text/css" href="{% static 'javascript/daterangepicker/daterangepicker.css' %}" />
+{% endblock %}
+{% block style %}
+<style>
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-row-flex {
+        display: flex;
+        column-gap: 1rem;
+    }
+
+    .form-row-flex col {
+        flex: 1;
+    }
+</style>
+{%  endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-9">
+        {% for data in api_data %}
+        <div class="card">
+          <div class="card-body">
+            <p style="margin: 10px; font-weight: bold;">Входящий звонок от: <span style="color: #1c7dbd;">{{ data.number_in }}</span> Принял звонок: <span style="color: #1c7dbd;">{{ data.number_in }}</span></p>
+            <p style="margin: 10px; font-weight: bold;">Время начала звонка: <span style="color: #1c7dbd;">{{ data.start_time|date:"d/m/Y H:i:s" }}</span> - Время конца звонка: <span style="color: #1c7dbd;">{{ data.end_time |date:"d/m/Y H:i:s"}}</span></p>
+           <!-- {% if data.downloaded %}
+           <div id="audio_exist_{{ data.unique_id }}">
+                <audio controls style="width: 100%;">
+                  <source src="/static/audio/{{ data.unique_id }}.wav" type="audio/wav">
+                </audio>
+                  <br>
+                
+            </div>
+           {% else %}
+               <form method="post"> 
+               {% csrf_token %}
+               <input type="hidden" value="{{ data.unique_id }}" name="api_data_unique_id">
+               <button style="margin: 10px;" class="btn btn-primary" type="submit">Загрузить</button>
+               </form>
+           {% endif %} -->
+           {% if data.unique_id|length > 4 %}
+            <a href="http://192.168.88.246/monitor/{{ data.start_time|date:"Y" }}/{{ data.start_time|date:"m" }}/{{ data.start_time|date:"d" }}/{{ data.unique_id }}.wav"  class="btn btn-primary" style="margin: 10px;" download>Скачать</a>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+    </div>
+<div class="col-3">
+
+<form method="get" class="filter-form">
+
+      <div class="row" style="margin-bottom:15px;">
+        {% for hidden in api_data_filter.form.hidden_fields %}
+              {{ hidden }}
+        {% endfor %}
+        <div class="form-group form-row-flex">
+
+            <div class="col date-start-field">
+                {{ api_data_filter.form.date.label_tag }}
+                {% render_field api_data_filter.form.date class="form-control date_class" %}
+            </div>
+            <div class="col date-end-field align-self-end">
+
+            </div>
+
+        </div>
+      <div class="form-group">
+          {% for error in api_data_filter.form.date.errors %}
+            <p class="help-block">{{ error }}</p>
+          {% endfor %}
+      </div>
+
+
+        <div class="form-group form-row-flex">
+              <div class="col">
+                  {{ api_data_filter.form.number_in.label_tag }}
+                {% render_field api_data_filter.form.number_in class="form-select" %}
+              </div>
+        </div>
+
+        <div class="gap-2 row-cols-1" style="margin-top:24px;">
+              <button class="btn btn-primary btn-filter-form" id="search_filter" type="submit"><i class="fas fa-search"></i> Поиск</button>
+        </div>
+
+
+    </div>
+
+
+  </form>
+
+
+    </div>
+</div>
+{% endblock %}
+{% block js %}
+   <script>
+        // $(document).ready(function(){
+           {#function UrlExists(url)#}
+           {# {#}
+           {#     let http = new XMLHttpRequest();#}
+           {#     http.open('HEAD', url, false);#}
+           {#     http.send();#}
+           {#     return http.status!==404;#}
+           {# };#}
+           {#{% for data in api_data %}#}
+           {#    if (UrlExists('/static/audio/{{ data.unique_id }}.wav')) {#}
+           {#        $('#audio_exist_{{ data.unique_id }}').css('display','none');#}
+           {#    } else{#}
+           {#        $('#audio_exist_{{ data.unique_id }}').css('display','none');#}
+           {#        $('#audio_exist_{{ data.unique_id }}').hide();#}
+           {#        console.log({{ data.unique_id }});#}
+           {#    };#}
+           {##}
+           {#{% endfor %}#}
+       // });
+    $(document).ready(function() {
+
+
+        const dateStartGenerated = document.getElementById('id_date_0');
+        const dateEndGenerated = document.getElementById('id_date_1');
+        const dateStartLabel = document.querySelector('[for="id_date_0"]');
+
+        const dateStartField = document.querySelector('.date-start-field');
+        const dateEndField = document.querySelector('.date-end-field');
+
+        dateEndField.innerHTML = " ";
+        dateEndField.appendChild(dateEndGenerated);
+        dateStartField.innerHTML = "";
+        dateStartField.appendChild(dateStartLabel);
+        dateStartField.appendChild(dateStartGenerated);
+
+
+        /*document.querySelector('.filter-form').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+
+        document.getElementById('id_date_0').value = moment($('#id_date_0').datepicker("getDate")).format('YYYY-MM-DD HH:mm');
+            document.getElementById('id_date_1').value = moment($('#id_date_1').datepicker("getDate")).format('YYYY-MM-DD HH:mm');
+    });*/
+
+
+        $(function () {
+            $('#id_date_0').daterangepicker({
+                timePicker: true,
+                timePicker24Hour: true,
+                timePickerIncrement: 30,
+                singleDatePicker: true,
+                showDropdowns: true,
+                minYear: 2020,
+                maxYear: parseInt(moment().format('YYYY'), 10),
+
+                maxDate: moment().format('YYYY-MM-DD 23:30:00'),
+                startDate: moment().subtract(1, 'days').startOf('hour'),
+                locale: {
+                    format: 'YYYY-MM-DD HH:mm',
+                    "applyLabel": "Ввод",
+                    "cancelLabel": "Отмена",
+                    "fromLabel": "От",
+                    "toLabel": "До",
+                    "daysOfWeek": [
+                        "Вс",
+                        "Пн",
+                        "Вт",
+                        "Ср",
+                        "Чт",
+                        "Пт",
+                        "Сб"
+                    ],
+                    "monthNames": [
+                        "Январь",
+                        "Февраль",
+                        "Март",
+                        "Апрель",
+                        "Май",
+                        "Июнь",
+                        "Июль",
+                        "Август",
+                        "Cентябрь",
+                        "Октябрь",
+                        "Ноябрь",
+                        "Декабрь"
+                    ],
+                    "firstDay": 1
+
+                }
+            });
+            $('#id_date_1').daterangepicker({
+                timePicker: true,
+                timePicker24Hour: true,
+                timePickerIncrement: 30,
+                singleDatePicker: true,
+                showDropdowns: true,
+                minYear: 2020,
+                maxYear: parseInt(moment().format('YYYY'), 10),
+
+                maxDate: moment().format('YYYY-MM-DD 23:30:00'),
+                startDate: moment().add(1, 'minutes'),
+                locale: {
+                    format: 'YYYY-MM-DD HH:mm',
+
+                    {#    {#}
+                    {#    toDisplay: function () {#}
+                    {#      return 'YYYY-MM-DD HH:mm';#}
+                    {#    },#}
+                    {#    toValue: function() {#}
+                    {#        return 'YYYY-MM-DD HH:mm';#}
+                    {#    },#}
+                    "applyLabel": "Ввод",
+                    "cancelLabel": "Отмена",
+                    "fromLabel": "От",
+                    "toLabel": "До",
+                    "daysOfWeek": [
+                        "Вс",
+                        "Пн",
+                        "Вт",
+                        "Ср",
+                        "Чт",
+                        "Пт",
+                        "Сб"
+                    ],
+                    "monthNames": [
+                        "Январь",
+                        "Февраль",
+                        "Март",
+                        "Апрель",
+                        "Май",
+                        "Июнь",
+                        "Июль",
+                        "Август",
+                        "Cентябрь",
+                        "Октябрь",
+                        "Ноябрь",
+                        "Декабрь"
+                    ],
+                    "firstDay": 1
+
+                }
+            });
+        });
+    });
+    </script>
+{% endblock %}
