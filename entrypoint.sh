@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/bin/sh
 pip install pyopenssl --upgrade
 
 python manage.py makemigrations --no-input
