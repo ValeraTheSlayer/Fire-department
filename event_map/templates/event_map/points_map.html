@@ -1,0 +1,335 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Карта</title>
+  <link rel="icon" href="{% static 'images/fire.png' %}" type="image/icon type">
+  <script src="{% static 'jquery/jquery-3.2.1.min.js' %}"></script>
+  <script src="{% static 'javascript/assets/particles.min.js' %}"></script>
+</head>
+<body>
+  <style>.map {
+    width: 100%;
+    height: 100vh;
+    background-color: #333;
+  }
+  </style>
+  <style>
+#menu {
+            position: absolute;
+            width: 12em;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            padding-bottom: 10px;
+            z-index: 2
+        }
+        #menu ul {
+            list-style-type: none;
+            padding: 20px;
+            margin: 0;
+        }
+        input {
+            width: 10em;
+        }
+
+        .header {
+            padding: 5px;
+
+        }
+.container {
+  display: block;
+  position: relative;
+  padding-left: 35px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  font-size: 15px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Hide the browser's default radio button */
+.container input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Create a custom radio button */
+.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  background-color: #eee;
+  border-radius: 50%;
+}
+
+/* On mouse-over, add a grey background color */
+.container:hover input ~ .checkmark {
+  background-color: #ccc;
+}
+
+/* When the radio button is checked, add a blue background */
+.container input:checked ~ .checkmark {
+  background-color: #2196F3;
+}
+
+/* Create the indicator (the dot/circle - hidden when not checked) */
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+/* Show the indicator (dot/circle) when checked */
+.container input:checked ~ .checkmark:after {
+  display: block;
+}
+
+/* Style the indicator (dot/circle) */
+.container .checkmark:after {
+ 	top: 9px;
+	left: 9px;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: white;
+}
+
+
+.send_location_type {
+  width:100%;
+  text-align: center;
+  background: #FF4742;
+  border: 1px solid #FF4742;
+  border-radius: 6px;
+  box-shadow: rgba(0, 0, 0, 0.1) 1px 2px 4px;
+  box-sizing: border-box;
+  color: #FFFFFF;
+  cursor: pointer;
+  display: inline-block;
+  font-family: nunito,roboto,proxima-nova,"proxima nova",sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 16px;
+  min-height: 40px;
+  outline: 0;
+  padding: 12px 14px;
+  text-align: center;
+  text-rendering: geometricprecision;
+  text-transform: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  vertical-align: middle;
+}
+
+.send_location_type:hover,
+.send_location_type:active {
+  background-color: initial;
+  background-position: 0 0;
+  color: #FF4742;
+}
+.send_location_type:active {
+  opacity: .5;
+}
+a:hover {
+    cursor: default;
+    text-decoration: none;
+    color:#000000;
+}
+</style>
+  <div id="map-test" class="map"></div>
+  <script src="https://api-maps.yandex.ru/2.1/?apikey=81c87445-f1fe-4e16-8b33-c83baf78e8f2&lang=ru_RU"></script>
+  <script>
+    let center = [42.899657, 71.392727];
+    function init()
+    {
+      let map = new ymaps.Map('map-test',{
+        center: center,
+        zoom: 16
+        });
+      var searchControl = new ymaps.control.SearchControl({
+        options: {
+          provider: 'yandex#search'
+                 }
+        });
+
+      objectManager = new ymaps.ObjectManager({
+                                              geoObjectOpenBalloonOnClick: true
+                                              });
+      map.geoObjects.add(objectManager);
+
+      searchControl.events.add('resultselect', function (e) {
+      var results = searchControl.getResultsArray(),
+      selected = e.get('index'),
+      point = results[selected].geometry.getCoordinates();
+      console.log(point)
+        })
+
+
+    
+    // Контекстное меню, позволяющее изменить параметры метки.
+    // Вызывается при нажатии правой кнопкой мыши на метке.
+    map.events.add('contextmenu', function (e) {
+      let xhttp = new XMLHttpRequest();
+      
+      
+      xhttp.onreadystatechange = function()
+        {
+          if (this.readyState == 4 && this.status == 200)
+          {
+            check_response(this.responseText)
+          }
+        }
+      function check_response(data){
+        console.log('post')
+        console.log(data)
+      }
+      var coords = e.get('coords');
+     // Создаем метку.
+      var myPlacemark = new ymaps.Placemark(coords, {}, 
+        {
+          // Красная иконка, растягивающаяся под содержимое.
+          preset: "islands#redStretchyIcon",
+          iconLayout: 'default#image',
+          iconImageHref: "{% static 'images/question.png' %}",
+        });
+    
+        // Если меню метки уже отображено, то убираем его.
+      if ($('#menu').css('display') == 'block') 
+        {
+          $('#menu').remove();
+        } 
+     else 
+        { 
+        
+          // HTML-содержимое контекстного меню.
+          var menuContent =
+              '<div id="menu">\
+                  <ul id="menu_list">\
+                      <li>Адрес: <br /> <textarea rows="3" cols="20" id="address" type="text" name="hint_text" readonly="readonly"></textarea></li>\
+                      <li>Комментарии: <br /> <textarea rows="2" cols="20" id="comments" type="text" name="comments" ></textarea></li>\
+                        <li><button class="send_location_type" type="submit" id="send_location_type_fire">Пожар</button></li>\
+                        <li><button class="send_location_type" type="submit" id="send_location_type_hydrant">Гидрант</button></li>\
+                        <li><button class="send_location_type" type="submit" id="send_location_type_secure">ООЗ</button></li>\
+                        <li><button class="send_location_type" type="submit" id="close">закрыть</button></li>\
+                  </ul>\
+            </div>';
+
+          // Размещаем контекстное меню на странице
+          $('body').append(menuContent);
+
+          // Задаем позицию меню.
+          $('#menu').css({
+              left: e.get('pagePixels')[0],
+              top: e.get('pagePixels')[1]
+           });
+          // Заполняем поля контекстного меню текущими значениями свойств метки.
+          coordinates = myPlacemark.geometry.getCoordinates()
+          $('#menu input[name="latitude"]').val(coordinates[0]);
+          $('#menu input[name="longitude"]').val(coordinates[1]);
+          
+          var myReverseGeocoder = ymaps.geocode([coordinates[0],coordinates[1]])
+          
+				  myReverseGeocoder.then(function (res) {
+            $('#menu textarea[name="hint_text"]').val(res.geoObjects.get(0).properties.get('text'));
+            point_data.append('address', res.geoObjects.get(0).properties.get('text'))
+            console.log(res.geoObjects.get(0).properties.get('text'))
+				  });
+          // При нажатии на кнопку "Сохранить" изменяем свойства метки
+          // значениями, введенными в форме контекстного меню.
+          $('#send_location_type_fire').click(function () {
+            console.log("{% url 'point' %}")
+            xhttp.open("POST", "{% url 'point' %}")
+            let csrftoken = "{{ csrf_token }}"
+            xhttp.setRequestHeader("X-CSRFToken", csrftoken);
+            var point_data = new FormData();
+            address = document.getElementById('address').value
+            user_comments = document.getElementById('comments').value
+            point_data.append('point_type', 'fire')
+            point_data.append('lat', coordinates[0])
+            point_data.append('long', coordinates[1])
+            point_data.append('address', address)
+            point_data.append('user_comments', user_comments)
+            xhttp.send(point_data)
+            myPlacemark.properties.set({
+              balloonContent : 'Пожар'
+              });
+            myPlacemark.options.set({
+              iconLayout: 'default#image',
+              iconImageHref: "{% static 'images/fire.png' %}"});
+              map.geoObjects.add(myPlacemark);
+              $('#menu').remove();
+              });
+
+          $('#send_location_type_hydrant ').click(function (e) {
+            console.log("{% url 'point' %}")
+            xhttp.open("POST", "{% url 'point' %}")
+            let csrftoken = "{{ csrf_token }}"
+            xhttp.setRequestHeader("X-CSRFToken", csrftoken);
+            var point_data = new FormData();
+            address = document.getElementById('address').value
+            user_comments = document.getElementById('comments').value
+            point_data.append('point_type', 'hydrant')
+            point_data.append('lat', coordinates[0])
+            point_data.append('long', coordinates[1])
+            point_data.append('address', address)
+            point_data.append('user_comments', user_comments)
+            xhttp.send(point_data)
+            myPlacemark.properties.set({
+              balloonContent : 'гидрант'
+              });
+
+            myPlacemark.options.set({
+              iconLayout: 'default#image',
+              iconImageHref: "{% static 'images/hydrant1.png' %}"});
+              map.geoObjects.add(myPlacemark);
+              $('#menu').remove();
+          });
+
+
+          $('#send_location_type_secure').click(function () {
+            console.log("{% url 'point' %}")
+            xhttp.open("POST", "{% url 'point' %}")
+            let csrftoken = "{{ csrf_token }}"
+            xhttp.setRequestHeader("X-CSRFToken", csrftoken);
+            var point_data = new FormData();
+            address = document.getElementById('address').value
+            user_comments = document.getElementById('comments').value
+            point_data.append('point_type', 'secure_place')
+            point_data.append('lat', coordinates[0])
+            point_data.append('long', coordinates[1])
+            point_data.append('address', address)
+            point_data.append('user_comments', user_comments)
+            xhttp.send(point_data)
+            myPlacemark.properties.set({
+              balloonContent : 'Объект повышеной безопсности'
+              });
+            myPlacemark.options.set({
+              iconLayout: 'default#image',
+              iconImageHref: "{% static 'images/home.png' %}"});
+              map.geoObjects.add(myPlacemark);
+              $('#menu').remove();
+          });
+
+          $('#close').click(function () {
+            $('#menu').remove();
+         });
+
+        } 
+  });
+    
+    
+}
+ymaps.ready(init);
+  </script>
+</body>
+</html>
