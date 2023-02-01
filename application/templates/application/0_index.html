@@ -70,7 +70,10 @@
                     <a class="nav-link {% if request.path == line_note %}active{% endif %}" href="{% url 'line_note' %}">Строевая записка</a>
                   </li>
                   <li class="nav-item">
-                    <a target="_blank" class="nav-link {% if request.path == line_note %}active{% endif %}" href="{% url 'map' %}">Карта</a>
+                    <a target="_blank" class="nav-link {% if request.path == line_note %}active{% endif %}" href="{% url 'map' %}">Оперативная карта</a>
+                  </li>
+                  <li class="nav-item">
+                    <a target="_blank" class="nav-link {% if request.path == line_note %}active{% endif %}" href="{% url 'points_map' %}">Карта событий</a>
                   </li>
                 </ul>
                 <!-- Right navbar links -->

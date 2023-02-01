@@ -11,9 +11,16 @@
   <script src="{% static 'javascript/assets/particles.min.js' %}"></script>
 </head>
 <body>
-  <style>.map {
+  <style>
+body, html {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+}
+  #map-test {
     width: 100%;
-    height: 100vh;
+    height: 95%;
     background-color: #333;
   }
   </style>
@@ -104,6 +111,8 @@
 }
 
 
+
+
 .send_location_type {
   width:100%;
   text-align: center;
@@ -166,19 +175,487 @@ a:hover {
                                               geoObjectOpenBalloonOnClick: true
                                               });
       map.geoObjects.add(objectManager);
+      
+      function get_history_point(type_of_points)
+      {
+        let point_xhttp = new XMLHttpRequest();
+        let csrftoken = "{{ csrf_token }}"
+        point_xhttp.open("POST", "{% url 'history_points' %}")
+        point_xhttp.setRequestHeader("X-CSRFToken", csrftoken);
+        var fire_data = new FormData();
+        fire_data.append('type_of_points', type_of_points)
+        point_xhttp.send(fire_data)
+        point_xhttp.onreadystatechange = function()
+          {
+            if (this.readyState == 4 && this.status == 200)
+            {
+              let text_test = this.responseText
+              objectManager.add(text_test);
+              console.log(type_of_points)
+            }
+          }
+        }
+      get_history_point('all')
 
+      
       searchControl.events.add('resultselect', function (e) {
-      var results = searchControl.getResultsArray(),
-      selected = e.get('index'),
-      point = results[selected].geometry.getCoordinates();
-      console.log(point)
-        })
+        var results = searchControl.getResultsArray(),
+        selected = e.get('index'),
+        point = results[selected].geometry.getCoordinates();
+        console.log(point)
+      })
+      //полигон
+      //полигон СПЧ-1
 
+      function draw_poligon_1(){
+        let polygon_1_xhttp = new XMLHttpRequest();
+        let csrftoken = "{{ csrf_token }}"
+        polygon_1_xhttp.open("GET", "{% url 'get_polygon_1_points' %}")
+        polygon_1_xhttp.setRequestHeader("X-CSRFToken", csrftoken);
+        var polygon_1_data = new FormData();
+        polygon_1_data.append('get_polygon_1_points', 'True')
+        polygon_1_xhttp.send(polygon_1_data)
+        polygon_1_xhttp.onreadystatechange = function()
+          {
+            if (this.readyState == 4 && this.status == 200)
+              {
+                response_text = this.responseText
+                var response_obj = JSON.parse(response_text);
+                var response_obj_keys = Object.keys(response_obj)
+                var coordinates_to_polygon = []
+                for (let key of response_obj_keys)
+                  {
+                    console.log(response_obj[key]['latitude'], response_obj[key]['longitude'])
+                    let one_point = [response_obj[key]['latitude'], response_obj[key]['longitude']]
+                    coordinates_to_polygon.unshift(one_point)
+                  }
+                  console.log(coordinates_to_polygon)
+                  console.log(typeof coordinates_to_polygon)
+
+                  const polygon_1 = new ymaps.Polygon([coordinates_to_polygon], {}, {
+                    // Курсор в режиме добавления новых вершин.
+                    editorDrawingCursor: "crosshair",
+                    // Максимально допустимое количество вершин.
+                    editorMaxPoints: 10000,
+                    // Цвет заливки.
+                    fillColor: '#00FF00',
+                    opacity: 0.5,
+                    // Цвет обводки.
+                    strokeColor: '#0000FF',
+                    // Ширина обводки.
+                    strokeWidth: 1
+                  });
+                  map.geoObjects.add(polygon_1);
+                  $('#edit_poligon_1').click(function () {
+                    polygon_1.editor.startEditing();
+                  });
+
+                  $('#draw_poligon_1').click(function () {
+                    const polygon_1 = new ymaps.Polygon([], {}, {
+                      // Курсор в режиме добавления новых вершин.
+                      editorDrawingCursor: "crosshair",
+                      // Максимально допустимое количество вершин.
+                      editorMaxPoints: 10000,
+                      // Цвет заливки.
+                      fillColor: '#00FF00',
+                      opacity: 0.5,
+                      // Цвет обводки.
+                      strokeColor: '#0000FF',
+                      // Ширина обводки.
+                      strokeWidth: 1
+                      });
+                    var stateMonitor = new ymaps.Monitor(polygon_1.editor.state);
+                    stateMonitor.add("drawing", function (newValue) {
+                      polygon_1.options.set("strokeColor", newValue ? '#FF756B' : '#0000FF');
+                    });
+                    map.geoObjects.add(polygon_1);
+                    polygon_1.editor.startDrawing();
+                    $('#save_poligon_1').click(function () {
+                      polygon_1.editor.stopDrawing();
+                      polygon_1.editor.stopEditing();
+                      polygon_1_coordinates = polygon_1.geometry.getCoordinates()[0]
+                      var polygon_1_data = new FormData();
+                      polygon_1_data.append('update_polygon_1_points', 'True')
+                      let id_ = 1
+                      for (let element of polygon_1_coordinates)
+                        {
+                          polygon_1_data.append(id_, element)
+                          console.log(element);
+                          id_ += 1;
+                        }
+                      let polygon_1_xhttp = new XMLHttpRequest();
+                      let csrftoken = "{{ csrf_token }}"
+                      polygon_1_xhttp.open("POST", "{% url 'get_polygon_1_points' %}")
+                      polygon_1_xhttp.setRequestHeader("X-CSRFToken", csrftoken);
+                      polygon_1_xhttp.send(polygon_1_data)
+                    });
+                  });
+
+                  $('#save_poligon_1').click(function () {
+                    polygon_1.editor.stopDrawing();
+                    polygon_1.editor.stopEditing();
+                    polygon_1_coordinates = polygon_1.geometry.getCoordinates()[0]
+                    var polygon_1_data = new FormData();
+                    polygon_1_data.append('update_polygon_1_points', 'True')
+                    let id_ = 1
+                    for (let element of polygon_1_coordinates)
+                      {
+                        polygon_1_data.append(id_, element)
+                        console.log(element);
+                        id_ += 1;
+                      }
+                    let polygon_1_xhttp = new XMLHttpRequest();
+                    let csrftoken = "{{ csrf_token }}"
+                    polygon_1_xhttp.open("POST", "{% url 'get_polygon_1_points' %}")
+                    polygon_1_xhttp.setRequestHeader("X-CSRFToken", csrftoken);
+                    polygon_1_xhttp.send(polygon_1_data)
+                  });
+
+              }
+          }
+
+      }
+      draw_poligon_1()
+      //Полигон СПЧ-2
+      function draw_poligon_2(){
+        let polygon_2_xhttp = new XMLHttpRequest();
+        let csrftoken = "{{ csrf_token }}"
+        polygon_2_xhttp.open("GET", "{% url 'get_polygon_2_points' %}")
+        polygon_2_xhttp.setRequestHeader("X-CSRFToken", csrftoken);
+        var polygon_2_data = new FormData();
+        polygon_2_data.append('get_polygon_2_points', 'True')
+        polygon_2_xhttp.send(polygon_2_data)
+        polygon_2_xhttp.onreadystatechange = function()
+          {
+            if (this.readyState == 4 && this.status == 200)
+              {
+                response_text = this.responseText
+                var response_obj = JSON.parse(response_text);
+                var response_obj_keys = Object.keys(response_obj)
+                var coordinates_to_polygon = []
+                for (let key of response_obj_keys)
+                  {
+                    console.log(response_obj[key]['latitude'], response_obj[key]['longitude'])
+                    let one_point = [response_obj[key]['latitude'], response_obj[key]['longitude']]
+                    coordinates_to_polygon.unshift(one_point)
+                  }
+                  console.log(coordinates_to_polygon)
+                  console.log(typeof coordinates_to_polygon)
+
+                  const polygon_2 = new ymaps.Polygon([coordinates_to_polygon], {}, {
+                    // Курсор в режиме добавления новых вершин.
+                    editorDrawingCursor: "crosshair",
+                    // Максимально допустимое количество вершин.
+                    editorMaxPoints: 10000,
+                    // Цвет заливки.
+                    fillColor: '#0059AC',
+                    opacity: 0.5,
+                    // Цвет обводки.
+                    strokeColor: '#0000FF',
+                    // Ширина обводки.
+                    strokeWidth: 1
+                  });
+                  map.geoObjects.add(polygon_2);
+                  $('#edit_poligon_2').click(function () {
+                    polygon_2.editor.startEditing();
+                  });
+
+                  $('#draw_poligon_2').click(function () {
+                    const polygon_2 = new ymaps.Polygon([], {}, {
+                      // Курсор в режиме добавления новых вершин.
+                      editorDrawingCursor: "crosshair",
+                      // Максимально допустимое количество вершин.
+                      editorMaxPoints: 10000,
+                      // Цвет заливки.
+                      fillColor: '#0059AC',
+                      opacity: 0.5,
+                      // Цвет обводки.
+                      strokeColor: '#0000FF',
+                      // Ширина обводки.
+                      strokeWidth: 1
+                      });
+                    var stateMonitor = new ymaps.Monitor(polygon_2.editor.state);
+                    stateMonitor.add("drawing", function (newValue) {
+                      polygon_2.options.set("strokeColor", newValue ? '#0059AC' : '#0000FF');
+                    });
+                    map.geoObjects.add(polygon_2);
+                    polygon_2.editor.startDrawing();
+                    $('#save_poligon_2').click(function () {
+                      polygon_2.editor.stopDrawing();
+                      polygon_2.editor.stopEditing();
+                      polygon_2_coordinates = polygon_2.geometry.getCoordinates()[0]
+                      var polygon_2_data = new FormData();
+                      polygon_2_data.append('update_polygon_2_points', 'True')
+                      let id_ = 1
+                      for (let element of polygon_2_coordinates)
+                        {
+                          polygon_2_data.append(id_, element)
+                          console.log(element);
+                          id_ += 1;
+                        }
+                      let polygon_2_xhttp = new XMLHttpRequest();
+                      let csrftoken = "{{ csrf_token }}"
+                      polygon_2_xhttp.open("POST", "{% url 'get_polygon_2_points' %}")
+                      polygon_2_xhttp.setRequestHeader("X-CSRFToken", csrftoken);
+                      polygon_2_xhttp.send(polygon_2_data)
+                    });
+                  });
+
+                  $('#save_poligon_2').click(function () {
+                    polygon_2.editor.stopDrawing();
+                    polygon_2.editor.stopEditing();
+                    polygon_2_coordinates = polygon_2.geometry.getCoordinates()[0]
+                    var polygon_2_data = new FormData();
+                    polygon_2_data.append('update_polygon_2_points', 'True')
+                    let id_ = 1
+                    for (let element of polygon_2_coordinates)
+                      {
+                        polygon_2_data.append(id_, element)
+                        console.log(element);
+                        id_ += 1;
+                      }
+                    let polygon_2_xhttp = new XMLHttpRequest();
+                    let csrftoken = "{{ csrf_token }}"
+                    polygon_2_xhttp.open("POST", "{% url 'get_polygon_2_points' %}")
+                    polygon_2_xhttp.setRequestHeader("X-CSRFToken", csrftoken);
+                    polygon_2_xhttp.send(polygon_2_data)
+                  });
+
+              }
+          }
+
+      }
+
+      draw_poligon_2()
+      //Полигон СПЧ-3
+      function draw_poligon_3(){
+        let polygon_3_xhttp = new XMLHttpRequest();
+        let csrftoken = "{{ csrf_token }}"
+        polygon_3_xhttp.open("GET", "{% url 'get_polygon_3_points' %}")
+        polygon_3_xhttp.setRequestHeader("X-CSRFToken", csrftoken);
+        var polygon_3_data = new FormData();
+        polygon_3_data.append('get_polygon_3_points', 'True')
+        polygon_3_xhttp.send(polygon_3_data)
+        polygon_3_xhttp.onreadystatechange = function()
+          {
+            if (this.readyState == 4 && this.status == 200)
+              {
+                response_text = this.responseText
+                var response_obj = JSON.parse(response_text);
+                var response_obj_keys = Object.keys(response_obj)
+                var coordinates_to_polygon = []
+                for (let key of response_obj_keys)
+                  {
+                    console.log(response_obj[key]['latitude'], response_obj[key]['longitude'])
+                    let one_point = [response_obj[key]['latitude'], response_obj[key]['longitude']]
+                    coordinates_to_polygon.unshift(one_point)
+                  }
+                  console.log(coordinates_to_polygon)
+                  console.log(typeof coordinates_to_polygon)
+
+                  const polygon_3 = new ymaps.Polygon([coordinates_to_polygon], {}, {
+                    // Курсор в режиме добавления новых вершин.
+                    editorDrawingCursor: "crosshair",
+                    // Максимально допустимое количество вершин.
+                    editorMaxPoints: 10000,
+                    // Цвет заливки.
+                    fillColor: '#882652',
+                    opacity: 0.5,
+                    // Цвет обводки.
+                    strokeColor: '#0000FF',
+                    // Ширина обводки.
+                    strokeWidth: 1
+                  });
+                  map.geoObjects.add(polygon_3);
+                  $('#edit_poligon_3').click(function () {
+                    polygon_3.editor.startEditing();
+                  });
+
+                  $('#draw_poligon_3').click(function () {
+                    const polygon_3 = new ymaps.Polygon([], {}, {
+                      // Курсор в режиме добавления новых вершин.
+                      editorDrawingCursor: "crosshair",
+                      // Максимально допустимое количество вершин.
+                      editorMaxPoints: 10000,
+                      // Цвет заливки.
+                      fillColor: '#882652',
+                      opacity: 0.5,
+                      // Цвет обводки.
+                      strokeColor: '#0000FF',
+                      // Ширина обводки.
+                      strokeWidth: 1
+                      });
+                    var stateMonitor = new ymaps.Monitor(polygon_3.editor.state);
+                    stateMonitor.add("drawing", function (newValue) {
+                      polygon_3.options.set("strokeColor", newValue ? '#882652' : '#0000FF');
+                    });
+                    map.geoObjects.add(polygon_3);
+                    polygon_3.editor.startDrawing();
+                    $('#save_poligon_3').click(function () {
+                      polygon_3.editor.stopDrawing();
+                      polygon_3.editor.stopEditing();
+                      polygon_3_coordinates = polygon_3.geometry.getCoordinates()[0]
+                      var polygon_3_data = new FormData();
+                      polygon_3_data.append('update_polygon_3_points', 'True')
+                      let id_ = 1
+                      for (let element of polygon_3_coordinates)
+                        {
+                          polygon_3_data.append(id_, element)
+                          console.log(element);
+                          id_ += 1;
+                        }
+                      let polygon_3_xhttp = new XMLHttpRequest();
+                      let csrftoken = "{{ csrf_token }}"
+                      polygon_3_xhttp.open("POST", "{% url 'get_polygon_3_points' %}")
+                      polygon_3_xhttp.setRequestHeader("X-CSRFToken", csrftoken);
+                      polygon_3_xhttp.send(polygon_3_data)
+                    });
+                  });
+
+                  $('#save_poligon_3').click(function () {
+                    polygon_3.editor.stopDrawing();
+                    polygon_3.editor.stopEditing();
+                    polygon_3_coordinates = polygon_3.geometry.getCoordinates()[0]
+                    var polygon_3_data = new FormData();
+                    polygon_3_data.append('update_polygon_3_points', 'True')
+                    let id_ = 1
+                    for (let element of polygon_3_coordinates)
+                      {
+                        polygon_3_data.append(id_, element)
+                        console.log(element);
+                        id_ += 1;
+                      }
+                    let polygon_3_xhttp = new XMLHttpRequest();
+                    let csrftoken = "{{ csrf_token }}"
+                    polygon_3_xhttp.open("POST", "{% url 'get_polygon_3_points' %}")
+                    polygon_3_xhttp.setRequestHeader("X-CSRFToken", csrftoken);
+                    polygon_3_xhttp.send(polygon_3_data)
+                  });
+
+              }
+          }
+
+      }
+      draw_poligon_3()
+
+      //Полигон СПЧ-4
+      function draw_poligon_4(){
+        let polygon_4_xhttp = new XMLHttpRequest();
+        let csrftoken = "{{ csrf_token }}"
+        polygon_4_xhttp.open("GET", "{% url 'get_polygon_4_points' %}")
+        polygon_4_xhttp.setRequestHeader("X-CSRFToken", csrftoken);
+        var polygon_4_data = new FormData();
+        polygon_4_data.append('get_polygon_4_points', 'True')
+        polygon_4_xhttp.send(polygon_4_data)
+        polygon_4_xhttp.onreadystatechange = function()
+          {
+            if (this.readyState == 4 && this.status == 200)
+              {
+                response_text = this.responseText
+                var response_obj = JSON.parse(response_text);
+                var response_obj_keys = Object.keys(response_obj)
+                var coordinates_to_polygon = []
+                for (let key of response_obj_keys)
+                  {
+                    console.log(response_obj[key]['latitude'], response_obj[key]['longitude'])
+                    let one_point = [response_obj[key]['latitude'], response_obj[key]['longitude']]
+                    coordinates_to_polygon.unshift(one_point)
+                  }
+                  console.log(coordinates_to_polygon)
+                  console.log(typeof coordinates_to_polygon)
+
+                  const polygon_4 = new ymaps.Polygon([coordinates_to_polygon], {}, {
+                    // Курсор в режиме добавления новых вершин.
+                    editorDrawingCursor: "crosshair",
+                    // Максимально допустимое количество вершин.
+                    editorMaxPoints: 10000,
+                    // Цвет заливки.
+                    fillColor: '#FFE019',
+                    opacity: 0.5,
+                    // Цвет обводки.
+                    strokeColor: '#0000FF',
+                    // Ширина обводки.
+                    strokeWidth: 1
+                  });
+                  map.geoObjects.add(polygon_4);
+                  $('#edit_poligon_4').click(function () {
+                    polygon_4.editor.startEditing();
+                  });
+
+                  $('#draw_poligon_4').click(function () {
+                    const polygon_4 = new ymaps.Polygon([], {}, {
+                      // Курсор в режиме добавления новых вершин.
+                      editorDrawingCursor: "crosshair",
+                      // Максимально допустимое количество вершин.
+                      editorMaxPoints: 10000,
+                      // Цвет заливки.
+                      fillColor: '#FFE019',
+                      opacity: 0.5,
+                      // Цвет обводки.
+                      strokeColor: '#0000FF',
+                      // Ширина обводки.
+                      strokeWidth: 1
+                      });
+                    var stateMonitor = new ymaps.Monitor(polygon_4.editor.state);
+                    stateMonitor.add("drawing", function (newValue) {
+                      polygon_4.options.set("strokeColor", newValue ? '#FFE019' : '#0000FF');
+                    });
+                    map.geoObjects.add(polygon_4);
+                    polygon_4.editor.startDrawing();
+                    $('#save_poligon_4').click(function () {
+                      polygon_4.editor.stopDrawing();
+                      polygon_4.editor.stopEditing();
+                      polygon_4_coordinates = polygon_4.geometry.getCoordinates()[0]
+                      var polygon_4_data = new FormData();
+                      polygon_4_data.append('update_polygon_4_points', 'True')
+                      let id_ = 1
+                      for (let element of polygon_4_coordinates)
+                        {
+                          polygon_4_data.append(id_, element)
+                          console.log(element);
+                          id_ += 1;
+                        }
+                      let polygon_4_xhttp = new XMLHttpRequest();
+                      let csrftoken = "{{ csrf_token }}"
+                      polygon_4_xhttp.open("POST", "{% url 'get_polygon_4_points' %}")
+                      polygon_4_xhttp.setRequestHeader("X-CSRFToken", csrftoken);
+                      polygon_4_xhttp.send(polygon_4_data)
+                    });
+                  });
+
+                  $('#save_poligon_4').click(function () {
+                    polygon_4.editor.stopDrawing();
+                    polygon_4.editor.stopEditing();
+                    polygon_4_coordinates = polygon_4.geometry.getCoordinates()[0]
+                    var polygon_4_data = new FormData();
+                    polygon_4_data.append('update_polygon_4_points', 'True')
+                    let id_ = 1
+                    for (let element of polygon_4_coordinates)
+                      {
+                        polygon_4_data.append(id_, element)
+                        console.log(element);
+                        id_ += 1;
+                      }
+                    let polygon_4_xhttp = new XMLHttpRequest();
+                    let csrftoken = "{{ csrf_token }}"
+                    polygon_4_xhttp.open("POST", "{% url 'get_polygon_4_points' %}")
+                    polygon_4_xhttp.setRequestHeader("X-CSRFToken", csrftoken);
+                    polygon_4_xhttp.send(polygon_4_data)
+                  });
+
+              }
+          }
+
+      }
+      draw_poligon_4()
+      //полигон
 
     
+
     // Контекстное меню, позволяющее изменить параметры метки.
     // Вызывается при нажатии правой кнопкой мыши на метке.
     map.events.add('contextmenu', function (e) {
+     
       let xhttp = new XMLHttpRequest();
       
       
@@ -200,7 +677,6 @@ a:hover {
           // Красная иконка, растягивающаяся под содержимое.
           preset: "islands#redStretchyIcon",
           iconLayout: 'default#image',
-          iconImageHref: "{% static 'images/question.png' %}",
         });
     
         // Если меню метки уже отображено, то убираем его.
@@ -261,7 +737,10 @@ a:hover {
             point_data.append('user_comments', user_comments)
             xhttp.send(point_data)
             myPlacemark.properties.set({
-              balloonContent : 'Пожар'
+              balloonContentHeader: 'Пожар',
+              balloonContentBody : '<b>Адрес:</b> ' + address +'<br/>' +  '<b>Примечание: </b>' + user_comments,
+              balloonContentFooter: "<b>Дата:</b>",
+              hintContent: 'Подробности метки пожар'
               });
             myPlacemark.options.set({
               iconLayout: 'default#image',
@@ -285,7 +764,11 @@ a:hover {
             point_data.append('user_comments', user_comments)
             xhttp.send(point_data)
             myPlacemark.properties.set({
-              balloonContent : 'гидрант'
+              balloonContentHeader: 'Гидрант',
+              balloonContentBody : '<b>Адрес:</b> ' + address +'<br/>' +  '<b>Примечание: </b>' + user_comments,
+              balloonContentFooter: "<b>Дата:</b> Только что",
+              
+              hintContent: 'Подробности метки гидрант'
               });
 
             myPlacemark.options.set({
@@ -297,7 +780,6 @@ a:hover {
 
 
           $('#send_location_type_secure').click(function () {
-            console.log("{% url 'point' %}")
             xhttp.open("POST", "{% url 'point' %}")
             let csrftoken = "{{ csrf_token }}"
             xhttp.setRequestHeader("X-CSRFToken", csrftoken);
@@ -311,7 +793,10 @@ a:hover {
             point_data.append('user_comments', user_comments)
             xhttp.send(point_data)
             myPlacemark.properties.set({
-              balloonContent : 'Объект повышеной безопсности'
+              balloonContentHeader: 'Объект повышеной безопсности',
+              balloonContentBody : '<b>Адрес:</b>' + address +'<br/>' +  '<b>Примечание: </b>' + user_comments,
+              balloonContentFooter: "<b>Дата:</b> Только что",
+              hintContent: 'Подробности метки ОПБ'
               });
             myPlacemark.options.set({
               iconLayout: 'default#image',
@@ -331,5 +816,25 @@ a:hover {
 }
 ymaps.ready(init);
   </script>
+    <table id="poligon_1_buttons">
+      <tr>
+        <td><button id="draw_poligon_1" type="button">Нарисовать Область СПЧ-1</button></td>
+        <td><button id="draw_poligon_2" type="button">Нарисовать Область СПЧ-2</button></td>
+        <td><button id="draw_poligon_3" type="button">Нарисовать Область СПЧ-3</button></td>
+        <td><button id="draw_poligon_4" type="button">Нарисовать Область СПЧ-4</button></td>
+      </tr>
+      <tr>
+        <td><button id="edit_poligon_1">Изменить Область СПЧ-1</button></td>
+        <td><button id="edit_poligon_2">Изменить Область СПЧ-2</button></td>
+        <td><button id="edit_poligon_3">Изменить Область СПЧ-3</button></td>
+        <td><button id="edit_poligon_4">Изменить Область СПЧ-4</button></td>
+      </tr>
+      <tr>
+        <td><button id="save_poligon_1">Сохранить Область СПЧ-1</button></td>
+        <td><button id="save_poligon_2">Сохранить Область СПЧ-2</button></td>
+        <td><button id="save_poligon_3">Сохранить Область СПЧ-3</button></td>
+        <td><button id="save_poligon_4">Сохранить Область СПЧ-4</button></td>
+      </tr>
+    </table>
 </body>
 </html>
