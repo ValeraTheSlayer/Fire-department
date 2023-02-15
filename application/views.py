@@ -38,7 +38,8 @@ from .process import html_to_pdf
 #from emergency.filters import CurrentEmergencyFilter
 
 from .forms import TransportForm
-
+from django.http import JsonResponse
+from django.core import serializers
 
 
 channel_layer = get_channel_layer()
@@ -316,12 +317,12 @@ def current_emergency(request):
         'question_category': question_category,
         'cur_appeal_modal': cur_appeal_modal,
         'count_call_number_modal': count_call_number_modal,
-        'departaments' : departaments,
+        'departaments': departaments,
         'transport': transport,
         'bosses': bosses,
         #'boss': boss,
-        'emergency_types' : emergency_types,
-        'object_categories' : object_categories,
+        'emergency_types': emergency_types,
+        'object_categories': object_categories,
         'emergency_ranks': emergency_ranks,
         #'object_owner': object_owner,
     })
@@ -718,11 +719,10 @@ def line_note_main(request, date_insert):
         if existing_user_len == 0:
             s.save()
 
-
-    if request.method == "POST" and request.is_ajax and request.is_ajax and 'selected_position' in request.POST:
+    if (request.method == "POST") and ('selected_position' in request.POST):
+        print('ajax_type')
         department = userinfo.department
         selected_position_list = json.loads(request.POST.get('selected_position'))
-        print('request', request.POST)
         for person in selected_position_list:
             if person['selected_position'] == 'None' or person['selected_person'] == 'None':
                 warning = 'Пожалуйста выберите из списка должность и ФИО'
@@ -730,25 +730,28 @@ def line_note_main(request, date_insert):
                 selected_position = Position.objects.get(id=int(person['selected_position']))
                 selected_person = Staff.objects.get(id=int(person['selected_person']))
                 if person['selected_status'] != 'None':
-
                     selected_status = Status.objects.get(id=int(person['selected_status']))
                 else:
                     selected_status = None
-                print(person['selected_gdzs'])
                 if person['selected_gdzs'] == True:
                     selected_gdzs = True
                 else:
                     selected_gdzs = False
-                is_unique_for_today = True
-                to_day_person_dublicetes = len(LineNoteMan.objects.filter(date_line_note=date_insert, staff=person['selected_person']))
-                if to_day_person_dublicetes > 0:
-                    is_unique_for_today = False
-                if is_unique_for_today:
+                unique_for_today = True
+                to_day_person_duplicate = len(LineNoteMan.objects.filter(date_line_note=date_insert, staff=person['selected_person']))
+                if to_day_person_duplicate > 0:
+                    unique_for_today = False
+                if not unique_for_today:
+                    duplicate_person = Staff.objects.get(pk=person['selected_person'])
+                    message = duplicate_person.full_name + ' - уже существует в строевой записке на текущую дату'
+                    return JsonResponse({"message": message}, status=400)
+                if unique_for_today:
                     b = LineNoteMan(date_line_note=date_insert, position=selected_position,
                                     staff=selected_person, status=selected_status,
                                     gdzs=selected_gdzs, department=department,
                                     )
                     b.save()
+        return JsonResponse({"result": 'success'}, status=200)
 
     # LINE NOTE OF TRANSPORT STATUS
     line_note_transport = LineNoteTrans.objects.filter(date_line_note=date_insert,
@@ -786,7 +789,7 @@ def line_note_main(request, date_insert):
     karaul = Sentry.objects.all()
     transform = TransportForm()
     all_def_staff = Staff.objects.filter(department=userinfo.department)
-
+    all_def_staff_without_today = Staff.objects.filter(department=userinfo.department).exclude(unique_id__in=line_note_list)
     return render(request, 'application/2_line_note_main.html', {
         'userinfo': userinfo,
         'date_insert': date_insert,
@@ -802,6 +805,7 @@ def line_note_main(request, date_insert):
         'transform': transform,
         'warning': warning,
         'all_staff': all_def_staff,
+        'all_def_staff_without_today': all_def_staff_without_today,
     })
 
 

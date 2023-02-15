@@ -6,11 +6,13 @@ from .models import Hydrants, FireHistory, SecurePlaces, \
                         Polygon_2_Coordinates,\
                         Polygon_3_Coordinates,\
                         Polygon_4_Coordinates
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
+from decimal import Decimal
+from yandex_geocoder import Client
+import numpy as np
 import json
-
-
-def test(request):
-    return render(request, 'event_map/oper_map.html')
+import requests
 
 
 def points_map(request):
@@ -128,12 +130,10 @@ def history_points(request):
 def get_polygon_1_points(request):
     if request.method == 'POST' and 'update_polygon_1_points' in request.POST:
         Polygon_1_Coordinates.objects.all().delete()
-        print('len-', len(request.POST))
         for id_ in range(1, len(request.POST)):
             point = request.POST.get(f'{id_}')
             point_lat = float(point.split(',')[0])
             point_long = float(point.split(',')[1])
-            print(id_, '-', point_lat, point_long)
             Polygon_1_Coordinates.objects.create(
                 latitude=point_lat,
                 longitude=point_long,
@@ -149,7 +149,6 @@ def get_polygon_1_points(request):
             polygon_1_coordinates_dict[id_] = {'latitude': latitude,
                                                'longitude': longitude}
             id_ += 1
-        print(polygon_1_coordinates_dict)
         polygon_1_coordinates_json = json.dumps(polygon_1_coordinates_dict)
         return HttpResponse(polygon_1_coordinates_json, content_type="application/json")
 
@@ -176,7 +175,6 @@ def get_polygon_2_points(request):
             polygon_2_coordinates_dict[id_] = {'latitude': latitude,
                                                'longitude': longitude}
             id_ += 1
-        print(polygon_2_coordinates_dict)
         polygon_2_coordinates_json = json.dumps(polygon_2_coordinates_dict)
         return HttpResponse(polygon_2_coordinates_json, content_type="application/json")
     return HttpResponse('empty')
@@ -193,7 +191,6 @@ def get_polygon_3_points(request):
                 latitude=point_lat,
                 longitude=point_long,
                 )
-            print(point_long, point_long)
         return HttpResponse('get_polygon_3_points success')
     if request.method == 'GET':
         polygon_3_coordinates = Polygon_3_Coordinates.objects.all()
@@ -235,3 +232,101 @@ def get_polygon_4_points(request):
         polygon_4_coordinates_json = json.dumps(polygon_4_coordinates_dict)
         return HttpResponse(polygon_4_coordinates_json, content_type="application/json")
     return HttpResponse('empty')
+
+
+def get_department(request):
+    point_type = request.POST.get('point_type')
+    polygon_1_coordinates = Polygon_1_Coordinates.objects.all()
+    polygon_1_coordinates_list = []
+
+    polygon_2_coordinates = Polygon_2_Coordinates.objects.all()
+    polygon_2_coordinates_list = []
+
+    polygon_3_coordinates = Polygon_3_Coordinates.objects.all()
+    polygon_3_coordinates_list = []
+
+    polygon_4_coordinates = Polygon_4_Coordinates.objects.all()
+    polygon_4_coordinates_list = []
+
+    for point in polygon_1_coordinates:
+        latitude = point.latitude
+        longitude = point.longitude
+        polygon_1_coordinates_list.append([longitude, latitude])
+
+    for point in polygon_2_coordinates:
+        latitude = point.latitude
+        longitude = point.longitude
+        polygon_2_coordinates_list.append([longitude, latitude])
+
+    for point in polygon_3_coordinates:
+        latitude = point.latitude
+        longitude = point.longitude
+        polygon_3_coordinates_list.append([longitude, latitude])
+
+    for point in polygon_4_coordinates:
+        latitude = point.latitude
+        longitude = point.longitude
+        polygon_4_coordinates_list.append([longitude, latitude])
+
+    polygon_1_coordinates_list_np = np.array(polygon_1_coordinates_list)
+    polygon_2_coordinates_list_np = np.array(polygon_2_coordinates_list)
+    polygon_3_coordinates_list_np = np.array(polygon_3_coordinates_list)
+    polygon_4_coordinates_list_np = np.array(polygon_4_coordinates_list)
+
+    polygon_1 = Polygon(polygon_1_coordinates_list_np)
+    polygon_2 = Polygon(polygon_2_coordinates_list_np)
+    polygon_3 = Polygon(polygon_3_coordinates_list_np)
+    polygon_4 = Polygon(polygon_4_coordinates_list_np)
+
+    if request.method == 'POST' and 'get_department' == point_type:
+        point_latitude = request.POST.get('lat')
+        point_longitude = request.POST.get('long')
+        check_point = Point(point_longitude, point_latitude)
+        print('map', point_longitude, point_latitude)
+
+        if check_point.within(polygon_1):
+            return HttpResponse('Область СПЧ-1')
+        if check_point.within(polygon_2):
+            return HttpResponse('Область СПЧ-2')
+        if check_point.within(polygon_3):
+            return HttpResponse('Область СПЧ-3')
+        if check_point.within(polygon_4):
+            return HttpResponse('Область СПЧ-4')
+
+        return HttpResponse('Не входит в ДЧС города Тараз')
+    if request.method == 'POST' and 'get_department_card' == point_type:
+        address_string = request.POST.get('address')
+        apikey = "81c87445-f1fe-4e16-8b33-c83baf78e8f2"
+        coordinates = fetch_coordinates(apikey, address_string)
+        point_latitude = float(coordinates[0])
+        point_longitude = float(coordinates[1])
+        print('card ', address_string , point_longitude, point_latitude)
+        check_point = Point(point_latitude, point_longitude)
+        if check_point.within(polygon_1):
+            return HttpResponse('Область СПЧ-1')
+        if check_point.within(polygon_2):
+            return HttpResponse('Область СПЧ-2')
+        if check_point.within(polygon_3):
+            return HttpResponse('Область СПЧ-3')
+        if check_point.within(polygon_4):
+            return HttpResponse('Область СПЧ-4')
+        return HttpResponse('Не входит в ДЧС города Тараз')
+        #coordinates = client.coordinates("Казахстан Тараз Толе-би 19")
+
+
+def fetch_coordinates(apikey, address):
+    base_url = "https://geocode-maps.yandex.ru/1.x"
+    response = requests.get(base_url, params={
+        "geocode": address,
+        "apikey": apikey,
+        "format": "json",
+    })
+    response.raise_for_status()
+    found_places = response.json()['response']['GeoObjectCollection']['featureMember']
+
+    if not found_places:
+        return None
+
+    most_relevant = found_places[0]
+    lon, lat = most_relevant['GeoObject']['Point']['pos'].split(" ")
+    return lon, lat

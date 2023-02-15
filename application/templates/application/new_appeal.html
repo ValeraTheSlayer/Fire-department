@@ -60,11 +60,11 @@ data-bs-backdrop="static" data-bs-keyboard="false">
         </div>
         <div class="col-md-6">
           <label for="address_modal" class="form-label" id="address" >Адрес</label>
-          <input  class="form-control" id="address_modal" name="address" type="text" size="50">
+          <input  class="form-control" id="address_modal" name="address" type="text" size="50" onfocusout="departmentFunction()">
       </div>
       <div class="col-md-1">         
         <label for="flat" class="form-label">Дом</label>
-        <input type="text" class="form-control" id="house" name="house">        
+        <input type="text" class="form-control" id="house" name="house" onfocusout="departmentFunction()">        
       </div>
       <div class="col-md-1">         
         <label for="flat" class="form-label">Кв</label>
@@ -131,8 +131,12 @@ data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="col">
             <label for="borderpost" class="form-label">Тип выезда:</label>
             <select class="form-select " id="emergency_type" name="emergency_type">     
-                {% for item in emergency_types %}                   
-                   <option value="{{item.id}}" selected="">{{item.name}}</option>                   
+                {% for item in emergency_types %}
+                    {% if item.name == 'Пожар' %}
+                        <option value="{{item.id}}" selected>{{item.name}}</option>
+                    {% else %}
+                        <option value="{{item.id}}">{{item.name}}</option>
+                    {% endif %}
                 {% endfor %}
             </select>
         </div>
@@ -152,8 +156,12 @@ data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="col-6">
                 <label for="borderpost" class="form-label">Ранг</label>
                 <select class="form-select " id="emergency_rank" name="emergency_rank">                    
-                    {% for item in emergency_ranks %}                   
-                    <option value="{{item.id}}" selected="">{{item.rank}}</option>                   
+                    {% for item in emergency_ranks %}
+                        {% if item.rank == 1 %}
+                            <option value="{{item.id}}" selected>{{item.rank}}</option>
+                        {% else %}
+                            <option value="{{item.id}}">{{item.rank}}</option>
+                        {% endif %}
                     {% endfor %}                       
                 </select>
             </div>
@@ -420,12 +428,75 @@ chatSocket = new WebSocket(url)
 let form = document.getElementById("address_modal");
 let form2 = document.getElementById("house");
 
-
-form2.addEventListener('input', (e)=>{
-let message = form.value;
-let message2 = form2.value;
-chatSocket.send(JSON.stringify(
+form.addEventListener('input', (e)=>{
+  let message = form.value;
+  let message2 = form2.value;
+  chatSocket.send(JSON.stringify(
     {'message': message,
      'message2': message2,}
-))})
+    ))
+
+  })
+
+
+
+form2.addEventListener('input', (e)=>{
+  let message = form.value;
+  let message2 = form2.value;
+  chatSocket.send(JSON.stringify(
+    {'message': message,
+     'message2': message2}
+    ))
+  })
+
+function departmentFunction()
+  {
+    let message1 = form.value;
+    let message2 = form2.value;
+    
+    let csrftoken = "{{ csrf_token }}"
+    let xhttp_get_department = new XMLHttpRequest();
+    let message = "Казахстан Тараз " + message1 + " " + message2
+    console.log(message1+message2)
+    var address_data = new FormData();
+    xhttp_get_department.open("POST", "{% url 'get_department' %}")
+    xhttp_get_department.setRequestHeader("X-CSRFToken", csrftoken);
+    address_data.append('point_type', "get_department_card")
+    address_data.append('address', message)
+    xhttp_get_department.send(address_data)
+    xhttp_get_department.onreadystatechange = function()
+    {
+      if (this.readyState == 4 && this.status == 200)
+        {
+          let department_text = this.responseText
+          console.log(department_text)
+          
+          if (department_text == "Область СПЧ-1")
+            {
+              $('#department').val('5');
+              $('#department').trigger('change'); 
+              console.log(1)
+            }
+            if (department_text == "Область СПЧ-2")
+            {
+              $('#department').val('6');
+              $('#department').trigger('change'); 
+              console.log(2)
+            }
+            if (department_text == "Область СПЧ-3")
+            {
+              $('#department').val('7');
+              $('#department').trigger('change'); 
+              console.log(3)
+            }
+            if (department_text == "Область СПЧ-4")
+            {
+              $('#department').val('8');
+              $('#department').trigger('change'); 
+              console.log(4)
+            }
+          
+        }
+    }
+  }
 </script>

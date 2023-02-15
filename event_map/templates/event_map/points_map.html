@@ -809,11 +809,75 @@ a:hover {
             $('#menu').remove();
          });
 
-        } 
+        }
+
   });
     
-    
+  map.events.add('dblclick', function (e)
+      {
+        
+        var coords = e.get('coords');
+
+        let placemark_in_polygon = new ymaps.Placemark(coords,
+          {
+            
+          },
+          {
+          balloonPanelMaxMapArea: 0,
+          iconLayout: 'default#image',
+          iconImageHref: "{% static 'images/fire.png' %}",
+          iconImageSize: [50, 50],
+          iconImageOffset: [-10, -20]
+        });
+        map.geoObjects.add(placemark_in_polygon);
+        
+        e.preventDefault();
+        let xhttp_get_department = new XMLHttpRequest();
+        xhttp_get_department.open("POST", "{% url 'get_department' %}")
+        let csrftoken = "{{ csrf_token }}"
+        xhttp_get_department.setRequestHeader("X-CSRFToken", csrftoken);
+        var point_get_department = new FormData();
+        point_get_department.append('point_type', 'get_department')
+        point_get_department.append('lat', coords[0])
+        point_get_department.append('long', coords[1])
+        console.log(coords[0])
+        xhttp_get_department.send(point_get_department)
+        xhttp_get_department.onreadystatechange = function()
+        {
+          if (this.readyState == 4 && this.status == 200)
+          {
+            var myReverseGeocoder = ymaps.geocode([coords[0],coords[1]])
+            let department_text = this.responseText
+				    myReverseGeocoder.then(function (res) {
+              placemark_in_polygon.properties.set({
+                balloonContentHeader: 'Пожар: '+department_text,
+                balloonContentBody : '<b>Адрес:</b> ' + res.geoObjects.get(0).properties.get('text') +'<br/>' ,
+                balloonContentFooter: "<b>Дата:</b>",
+                hintContent: this.responseText
+              });
+				  });
+          placemark_in_polygon.balloon.open();
+          console.log(typeof this.responseText)
+        }
+        }
+
+  });
 }
+
+let url = `ws://${window.location.host}/ws/socket-server/`
+const chatSocket = new WebSocket(url)
+
+chatSocket.onmessage = function(e){
+    let data = JSON.parse(e.data)
+    if(data.type === 'chat')
+    {
+        var messages = document.getElementsByTagName("input")[0];
+        console.log(messages)
+        messages.value = "Казахстан, Тараз, " +data.message +" "+ data.message2
+        
+    }
+ }
+ 
 ymaps.ready(init);
   </script>
     <table id="poligon_1_buttons">
