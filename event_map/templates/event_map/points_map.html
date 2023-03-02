@@ -862,7 +862,6 @@ a:hover {
         }
 
   });
-}
 
 let url = `ws://${window.location.host}/ws/socket-server/`
 const chatSocket = new WebSocket(url)
@@ -874,11 +873,48 @@ chatSocket.onmessage = function(e){
         var messages = document.getElementsByTagName("input")[0];
         console.log(messages)
         messages.value = "Казахстан, Тараз, " +data.message +" "+ data.message2
+        console.log("Казахстан, Тараз, " +data.message +" "+ data.message2)
+        console.log(data.latitude_temp)
+        console.log(data.longitude_temp)
+
+        var socket_placemark = new ymaps.Placemark([data.latitude_temp, data.longitude_temp], {}, 
+        {
+          // Красная иконка, растягивающаяся под содержимое.
+          preset: "islands#redStretchyIcon",
+          iconLayout: 'default#image',
+        });
+        socket_placemark.properties.set({
+                balloonContentHeader: 'Пожар',
+                balloonContentBody : '<b>Адрес:</b> ' + data.message +" "+ data.message2 +'<br/>' ,
+                balloonContentFooter: "<b>Дата:</b>",
+                hintContent: this.responseText
+              });
         
+        projection =  map.options.get('projection'),
+
+        globalPixel = projection.toGlobalPixels([data.latitude_temp, data.longitude_temp], map.getZoom()),
+
+        size = map.container.getSize();
+
+        // map.panTo(projection.fromGlobalPixels([globalPixel[0], (globalPixel[1] - size[1]/2 +10) ], map.getZoom()),
+
+          // {delay: 0, callback: function() {
+
+          //   socket_placemark.balloon.open();
+
+          // }});
+        
+        // var pixelCenter = map.getGlobalPixelCenter([data.latitude_temp, data.longitude_temp]);
+        // console.log(pixelCenter)
+        // map.setCenter([data.latitude_temp, data.longitude_temp], 15, {
+        //   duration: 15000});
     }
  }
- 
+}
 ymaps.ready(init);
+
+ 
+
   </script>
     <table id="poligon_1_buttons">
       <tr>

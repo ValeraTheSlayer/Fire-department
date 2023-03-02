@@ -285,6 +285,7 @@ def get_department(request):
         print('map', point_longitude, point_latitude)
 
         if check_point.within(polygon_1):
+
             return HttpResponse('Область СПЧ-1')
         if check_point.within(polygon_2):
             return HttpResponse('Область СПЧ-2')
@@ -303,14 +304,34 @@ def get_department(request):
         print('card ', address_string , point_longitude, point_latitude)
         check_point = Point(point_latitude, point_longitude)
         if check_point.within(polygon_1):
-            return HttpResponse('Область СПЧ-1')
+            department_dict = {'latitude': latitude,
+                               'longitude': longitude,
+                               'department_text': 'Область СПЧ-1'}
+            department_json = json.dumps(department_dict)
+            return HttpResponse(department_json, content_type="application/json")
         if check_point.within(polygon_2):
-            return HttpResponse('Область СПЧ-2')
+            department_dict = {'latitude': latitude,
+                               'longitude': longitude,
+                               'department_text': 'Область СПЧ-2'}
+            department_json = json.dumps(department_dict)
+            return HttpResponse(department_json, content_type="application/json")
         if check_point.within(polygon_3):
-            return HttpResponse('Область СПЧ-3')
+            department_dict = {'latitude': latitude,
+                               'longitude': longitude,
+                               'department_text': 'Область СПЧ-3'}
+            department_json = json.dumps(department_dict)
+            return HttpResponse(department_json, content_type="application/json")
         if check_point.within(polygon_4):
-            return HttpResponse('Область СПЧ-4')
-        return HttpResponse('Не входит в ДЧС города Тараз')
+            department_dict = {'latitude': latitude,
+                               'longitude': longitude,
+                               'department_text': 'Область СПЧ-4'}
+            department_json = json.dumps(department_dict)
+            return HttpResponse(department_json, content_type="application/json")
+        department_dict = {'latitude': latitude,
+                           'longitude': longitude,
+                           'department_text': 'Не входит в ДЧС города Тараз'}
+        department_json = json.dumps(department_dict)
+        return HttpResponse(department_json, content_type="application/json")
         #coordinates = client.coordinates("Казахстан Тараз Толе-би 19")
 
 

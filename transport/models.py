@@ -2,6 +2,8 @@ from django.db import models
 from department_structure.models import FireDepartment
 #from application.models import FireDepartment
 
+
+
 class Brand(models.Model):
     brand = models.CharField(max_length=100, unique=True)
 
@@ -62,9 +64,29 @@ class Transport(models.Model):
     department = models.ForeignKey(FireDepartment, on_delete=models.CASCADE,
                                    verbose_name='Департамент')
 
+    gsm_default = models.IntegerField(default=0, verbose_name='ГСМ')
+    foam_default = models.IntegerField(default=0, verbose_name='Пена')
+
+    sleeves_77_default = models.IntegerField(default=0, verbose_name='Рукава 77мм')
+    sleeves_66_default = models.IntegerField(default=0, verbose_name='Рукава 66мм')
+    sleeves_51_default = models.IntegerField(default=0, verbose_name='Рукава 51мм')
+
+    fire_monitors_stationary_default = models.IntegerField(default=0, verbose_name='Лафетные сволы стационарные')
+    fire_monitors_portable_default = models.IntegerField(default=0, verbose_name='Лафетные сволы переносные')
+
+    gps_600_default = models.IntegerField(default=0, verbose_name='ГПС - 600')
+    blizzard_default = models.IntegerField(default=0, verbose_name='Пурга')
+    portable_radios_default = models.IntegerField(default=0, verbose_name='переносные радиостанции')
+    flashlight_default = models.IntegerField(default=0, verbose_name='электрофонарь')
+    spotlight_default = models.IntegerField(default=0, verbose_name='прожектор')
+    current_default = models.IntegerField(default=0, verbose_name='ТОК')
+    l1_default = models.IntegerField(default=0, verbose_name='Л - 1')
+    rescue_ropes_default = models.IntegerField(default=0, verbose_name='спасательные веревки')
     class Meta:
         verbose_name_plural = "Транспорты"
         verbose_name = "Транспорт"
 
     def __str__(self):
         return self.brand.brand + ' [' + self.department.name + ']'
+
+

@@ -91,24 +91,64 @@
             {% endif %}
 
             </div>
-            <div class="col-md-12">
+            <div class="col-md-12" style="overflow-x: auto !important; ">
             {% if line_note_transport %}
                 <h2 style="text-align: center;">Пожарная техника</h2>
-                <table class="table table-striped table-bordered table-responsive-md">
+                <table class="table table-striped table-bordered table-responsive-md" style="margin-left: auto; margin-right: auto; border: 1px solid black;">
                 <thead>
                     <tr>
-                        <th rowspan="2">Наименование пожарных подразделений</th>
-                        <th colspan="2">В расчете</th>
-                        <th colspan="2">В резерве</th>
-                        <th colspan="2">На ремонте</th>
+                        <th rowspan="3">Наименование пожарных подразделений</th>
+                        <th colspan="12" style="text-align:center !important;">ПОЖАРНАЯ ТЕХНИКА</th>
+                        <th rowspan="3" style="text-align:center !important;">Пена на складе</th>
+                        <th rowspan="3" style="text-align:center !important;" >Гидрокостюм</th>
+                        <th colspan="3" rowspan="2" style="text-align:center !important;" >рукава</th>
+                        <th colspan="29" style="text-align:center !important;">Вооружение в расчетах</th>
+
+                        
                     </tr>
                     <tr>
-                        <th>Тип основного пожарного автомобиля</th>
-                        <th>Марка специального пожарного автомобиля</th>
-                        <th>Тип основного пожарного автомобиля</th>
-                        <th>Марка специального пожарного автомобиля</th>
-                        <th>Тип основного пожарного автомобиля</th>
-                        <th>Марка специального пожарного автомобиля</th>
+                        <th colspan="4" style="text-align:center !important; background: #00B0F0;">В расчете</th>
+                        <th colspan="4" style="text-align:center !important; background: #FFFF00;">В резерве</th>
+                        <th colspan="2" style="text-align:center !important; background: #EB969D;">На ремонте</th>
+                        <th colspan="2" style="text-align:center !important;">Мотопомпы</th>
+                        <th colspan="3" style="text-align:center !important;">Лафетные сволы</th>
+
+                        <th rowspan="3" style="text-align:center !important;">ГПС-600</th>
+                        <th rowspan="3" style="text-align:center !important;">«Пурга»</th>
+                        <th rowspan="3" style="text-align:center !important;">переносные радиостанции</th>
+                        <th rowspan="3" style="text-align:center !important;">электрофонарь</th>
+                        <th rowspan="3" style="text-align:center !important;">прожектор</th>
+                        <th rowspan="3" style="text-align:center !important;">ТОК</th>
+                        <th rowspan="3" style="text-align:center !important;">Л-1</th>
+                        <th rowspan="3" style="text-align:center !important;">спасательные веревки</th>
+
+                         
+
+                    </tr>
+                    <tr>
+                        <th style="text-align:center !important; background: #00B0F0;">Тип основного пожарного автомобиля</th>
+                        <th style="text-align:center !important; background: #00B0F0;">Марка специального пожарного автомобиля</th>
+                        <th style="text-align:center !important; background: #00B0F0;">ГСМ</th>
+                        <th style="text-align:center !important; background: #00B0F0;">Пена</th>
+                        <th style="text-align:center !important; background: #FFFF00;">Тип основного пожарного автомобиля</th>
+                        <th style="text-align:center !important; background: #FFFF00;">Марка специального пожарного автомобиля</th>
+                        <th style="text-align:center !important; background: #FFFF00;">ГСМ</th>
+                        <th style="text-align:center !important; background: #FFFF00;">Пена</th> 
+                        <th style="text-align:center !important; background: #EB969D;" >Тип основного пожарного автомобиля</th>
+                        <th style="text-align:center !important; background: #EB969D;">Марка специального пожарного автомобиля</th>
+
+                        <th class="text-center">в боевом расчете</th>
+                        <th style="text-align:center !important;">на ремонте</th> 
+                        <th class="text-center">77мм</th>
+                        <th class="text-center">66мм</th>
+                        <th class="text-center">51мм</th>
+
+
+                        <th class="text-center">стационарные</th>
+                        <th class="text-center">переносные</th>
+                        
+                        
+
                     </tr>
                 </thead>
                 <tbody>
@@ -117,10 +157,38 @@
                         <th scope="row" {% if rep.tab_row > -1 %} rowspan="{{ rep.tab_row }}" {% endif %}>{{rep.dep_unique_id}}</th>
                         <td>{{ rep.counting_brand | first}}</td>
                         <td>{{ rep.counting_model | first}}</td>
+                        <td>{{ rep.counting_gsm | first }}</td>
+                        <td>{{ rep.counting_foam | first }}</td>
+
                         <td>{{ rep.reserve_brand | first}}</td>
                         <td>{{ rep.reserve_model | first}}</td>
+                        <td>{{ rep.reserve_gsm | first}}</td>
+                        <td>{{ rep.reserve_foam | first}}</td>
+
                         <td>{{ rep.renovation_brand | first}}</td>
                         <td>{{ rep.renovation_model | first}}</td>
+                        
+
+                        
+                        <td>{{ rep.motor_pumps_in_combat | first }}</td>
+                        <td>{{ rep.motor_pumps_on_repair | first }}</td>
+                        <td>{{ rep.foam_stock | first }}</td>
+                        <td>{{ rep.hydra_costume | first }}</td>
+
+
+                        <td>{{ rep.counting_sleeves_77 | first }}</td>
+                        <td>{{ rep.counting_sleeves_66 | first }}</td>
+                        <td>{{ rep.counting_sleeves_51 | first }}</td>
+                        <td>{{ rep.counting_fire_monitors_stationary | first }}</td>
+                        <td>{{ rep.counting_fire_monitors_portable | first }}</td>
+                        <td>{{ rep.counting_gps_600 | first }}</td>
+                        <td>{{ rep.counting_blizzard | first }}</td>
+                        <td>{{ rep.counting_portable_radios | first }}</td>
+                        <td>{{ rep.counting_flashlight | first }}</td>
+                        <td>{{ rep.counting_spotlight | first }}</td>
+                        <td>{{ rep.counting_current | first }}</td>
+                        <td>{{ rep.counting_l1 | first }}</td>
+                        <td>{{ rep.counting_rescue_ropes | first }}</td>
                     </tr>
                     {% if rep.tab_row > -1  %}
                         {% with ''|center:rep.tab_row as range %}
@@ -128,10 +196,11 @@
                             {% with forloop.counter as out_loop %}
                                 {% if out_loop > 1 %}
                                 <tr>
+                                    <!--В расчете START-->
                                     <td>
                                         {% for foo in rep.counting_brand %}
                                             {% if forloop.counter  == out_loop%}
-                                                {{ foo }} {{ forloop.counter }} {{ out_loop }}
+                                                {{ foo }} 
                                             {% endif %}
                                         {% endfor %}
                                     </td>
@@ -142,6 +211,24 @@
                                             {% endif %}
                                         {% endfor %}
                                     </td>
+                                    <td>
+                                        {% for foo in rep.counting_foam %}
+                                            {% if forloop.counter  == out_loop%}
+                                                {{ foo }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for foo in rep.counting_gsm %}
+                                            {% if forloop.counter  == out_loop%}
+                                                {{ foo }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+
+                                    
+                                    <!--В расчете END-->
+                                    <!--Резерв START-->
                                     <td>
                                         {% for foo in rep.reserve_brand %}
                                             {% if forloop.counter  == out_loop%}
@@ -157,6 +244,22 @@
                                         {% endfor %}
                                     </td>
                                     <td>
+                                        {% for foo in rep.reserve_gsm %}
+                                            {% if forloop.counter  == out_loop%}
+                                                {{ foo }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for foo in rep.reserve_foam %}
+                                            {% if forloop.counter  == out_loop%}
+                                                {{ foo }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <!--Резерв END-->
+                                    <!-- На ремонте START-->
+                                    <td>
                                         {% for foo in rep.renovation_brand %}
                                             {% if forloop.counter  == out_loop%}
                                                 {{ foo }}
@@ -170,6 +273,103 @@
                                             {% endif %}
                                         {% endfor %}
                                     </td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>
+                                        {% for foo in rep.counting_sleeves_77 %}
+                                            {% if forloop.counter  == out_loop %}
+                                                {{ foo }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for foo in rep.counting_sleeves_66 %}
+                                            {% if forloop.counter  == out_loop %}
+                                                {{ foo }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for foo in rep.counting_sleeves_51 %}
+                                            {% if forloop.counter  == out_loop %}
+                                                {{ foo }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    
+                                    <td>
+                                        {% for foo in rep.counting_fire_monitors_stationary %}
+                                            {% if forloop.counter  == out_loop %}
+                                                {{ foo }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for foo in rep.counting_fire_monitors_portable %}
+                                            {% if forloop.counter  == out_loop %}
+                                                {{ foo }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for foo in rep.counting_gps_600 %}
+                                            {% if forloop.counter  == out_loop %}
+                                                {{ foo }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for foo in rep.counting_blizzard %}
+                                            {% if forloop.counter  == out_loop %}
+                                                {{ foo }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for foo in rep.counting_portable_radios %}
+                                            {% if forloop.counter  == out_loop %}
+                                                {{ foo }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for foo in rep.counting_flashlight %}
+                                            {% if forloop.counter  == out_loop %}
+                                                {{ foo }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for foo in rep.counting_spotlight %}
+                                            {% if forloop.counter  == out_loop %}
+                                                {{ foo }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for foo in rep.counting_current %}
+                                            {% if forloop.counter  == out_loop %}
+                                                {{ foo }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for foo in rep.counting_l1 %}
+                                            {% if forloop.counter  == out_loop %}
+                                                {{ foo }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for foo in rep.counting_rescue_ropes %}
+                                            {% if forloop.counter  == out_loop %}
+                                                {{ foo }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <!-- На ремонте END-->
                                 </tr>
                                 {% endif %}
                             {% endwith %}
@@ -182,7 +382,7 @@
                 </table>
 
             {% else %}
-             <h3>Нету данных по ЛС</h3>
+             <h3>Нету данных по Технике</h3>
             {% endif %}
 
             </div>

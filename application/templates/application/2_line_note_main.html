@@ -5,7 +5,8 @@
 {% block content %}
   <div class="row text-center">
     {% if perms.application.user_main_call_center_city %}
-        <h3> Сил и средств противопожарной службы города {{ userinfo.city.name }} на <span>{{ date_insert }}</span></h3>
+        <!-- <h3> Сил и средств противопожарной службы города {{ userinfo.city.name }} на <span>{{ date_insert }}</span></h3> -->
+        <h3> Силы противопожарной службы города {{ userinfo.city.name }} на <span>{{ date_insert }}</span></h3>
     {% elif perms.application.user_fire_department_call_center %}
         <h3> Сил и средств {{ userinfo.department.unique_id }} города {{ userinfo.city.name }} на <span>{{ date_insert }}</span></h3>
     {% endif %}
@@ -112,12 +113,24 @@
               {% for staff_member in all_staff %}
                 <tr class = "staff_person" style="display: none;">
                     <td aria-label="Выберите должность" id="selected_position">
-                      {% for pos in  positions %}
-                        {% if pos.id == staff_member.position_id %}
-                          <option value="{{ pos.id }}" selected>{{ pos.name }}</option>
-                        {% endif %}
-                      {% endfor % %}
-                    </td>
+                      {% if staff_member.position_id in commanders_position_id %}
+                        <select class="form-select selected_commanders_status" aria-label="Должность на сегодня" id="temp_commanders_positions">
+                          {% for pos in  commanders_positions %}
+                            {% if pos.id == staff_member.position_id %}
+                              <option value="{{pos.id}}" selected>{{ pos.name }}</option>
+                            {% else %}
+                              <option value="{{pos.id}}">{{ pos.name }}</option>
+                            {% endif  %}
+                          {% endfor % %}
+                        </select>
+                      {% else %}
+                        {% for pos in  positions %}
+                          {% if pos.id == staff_member.position_id %}
+                            <option value="{{ pos.id }}" selected>{{ pos.name }}</option>
+                          {% endif %}
+                        {% endfor % %}
+                      {% endif %}
+                      </td>
                     <td aria-label="Выберите сотрудника" id="selected_person">
                           {% for staff_pers in  staff_members_base %}
                             {% if staff_member.full_name == staff_pers.full_name %}
@@ -164,65 +177,241 @@
       </div>
     </div>
     {% endif %}
-  <div class="col-md-12">
+  <div class="col-md-12" style="overflow-x: auto !important; ">
         <button style="margin: 15px 0 15px 0;" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add_new_transport">
           Добавить новую технику
         </button>
-        <table class="table align-middle table-hover">
+        <div class="row text-center">
+            <h3> Средств противопожарной службы города {{ userinfo.city.name }} на <span>{{ date_insert }}</span></h3>
+        </div>
+        <table class="table align-middle table-hover" style="margin-left: auto; margin-right: auto; border: 1px solid black;">
           <thead>
-            <tr>
+
+            <tr style="margin-left: auto; margin-right: auto; border: 1px solid black;">
               <th scope="col">Марка</th>
               <th scope="col">Тип</th>
+              <th scope="col">ГСМ</th>
+              <th scope="col">Пена</th>
               <th scope="col">Модель</th>
-              <th scope="col">Рег. номер</th>
               <th scope="col">Примечение</th>
+              <th scope="col" style="width: 200px;">Рег. номер</th>
+
+
+              <th style="margin-left: auto; margin-right: auto; border: 1px solid black;" rowspan="2" scope="col">пена на складе</th>
+              <th style="margin-left: auto; margin-right: auto; border: 1px solid black;" rowspan="2" scope="col">гидрокостюм</th>
+              <th style="margin-left: auto; margin-right: auto; border: 1px solid black;" colspan="2" scope="col">мотопомпы</th>
+
+              <th scope="col">Рукава 77мм</th>
+              <th scope="col">Рукава 66мм</th>
+              <th scope="col">Рукава 51мм</th>
+              <th scope="col">Лафетные сволы стационарные</th>
+              <th scope="col">Лафетные сволы переносные</th>
+              <th scope="col">ГПС - 600</th>
+              <th scope="col">Пурга</th>
+              <th scope="col">Переносные радиостанции</th>
+              <th scope="col">Электрофонарь</th>
+              <th scope="col">Прожектор</th>
+              <th scope="col">ТОК</th>
+              <th scope="col">Л-1</th>
+              <th scope="col">Спасательные веревки</th>
+              
             </tr>
+            <tr style="margin-left: auto; margin-right: auto; border-bottom: 1px solid white;">
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th ></th>
+              <th ></th>
+              <th style="margin-left: auto; margin-right: auto; border: 1px solid black;" scope="col">в боевом расчете</th>
+              <th style="margin-left: auto; margin-right: auto; border: 1px solid black;" scope="col">на ремонте</th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+            </tr>
+
           </thead>
           <tbody>
           {% if line_note_transport %}
+          
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th class="text-center" style="margin-left: auto; margin-right: auto; border: 1px solid black;">{{ out_of_trans.foam_stock }} </th>
+                <th class="text-center" style="margin-left: auto; margin-right: auto; border: 1px solid black;">{{ out_of_trans.hydra_costume }}</th>
+                <th class="text-center" style="margin-left: auto; margin-right: auto; border: 1px solid black;">{{ out_of_trans.motor_pumps_on_repair }}</th>
+                <th class="text-center" style="margin-left: auto; margin-right: auto; border: 1px solid black;">{{ out_of_trans.motor_pumps_in_combat }}</th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
               {% for line_note in line_note_transport %}
+
                 <tr>
                     <td>{{ line_note.transport.brand }}</td>
                     <td>{{ line_note.transport.type }}</td>
+                    <td>{{ line_note.gsm }}</td>
+                    <td>{{ line_note.foam }}</td>
                     <td>{{ line_note.transport.trans_model }}</td>
-                    <td>{{ line_note.transport.new_number }}</td>
-                    <td>
-                      <select class="form-select selected_trans_status" aria-label="Примечение" id="selectedTransStatus_{{ line_note.transport.id }}">
-                        <option value="None" selected>В расчете</option>
-                        {% for st in  trans_status %}
-                            <option value="{{st.id}}" {%if st == line_note.trans_status %}selected{% endif %}>{{ st.status }}</option>
-                        {% endfor % %}
-                      </select>
-                    </td>
+                    
+                    {% if line_note.trans_status == None %}
+                      <td> В расчете</td>
+                    {% else %}
+                      <td>{{ line_note.trans_status }}</td>
+                    {% endif %}
+                    <td style="white-space: nowrap" >{{ line_note.transport.new_number }}</td>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+
+
+                    <td >{{ line_note.sleeves_77 }}</td>
+                    <td >{{ line_note.sleeves_66 }}</td>
+                    <td >{{ line_note.sleeves_51 }}</td>
+
+                    <td >{{ line_note.fire_monitors_stationary }}</td>
+                    <td >{{ line_note.fire_monitors_portable }}</td>
+
+                    <td >{{ line_note.gps_600 }}</td>
+                    <td >{{ line_note.blizzard }}</td>
+                    <td >{{ line_note.portable_radios }}</td>
+                    <td >{{ line_note.flashlight }}</td>
+                    <td >{{ line_note.spotlight }}</td>
+                    <td >{{ line_note.current }}</td>
+                    <td >{{ line_note.l1 }}</td>
+                    <td >{{ line_note.rescue_ropes }}</td>
+
                 </tr>
               {% endfor %}
-            {% else %}
-              {% for tran in transports %}
-                <tr>
-                    <td>{{ tran.brand }}</td>
-                    <td>{{ tran.type }}</td>
-                    <td>{{ tran.trans_model }}</td>
-                    <td>{{ tran.new_number }}</td>
-                    <td>
-                      <select class="form-select selected_trans_status" aria-label="Примечение" id="selectedTransStatus_{{ tran.id }}">
-                        <option value="None" selected>В расчете</option>
-                        {% for st in  trans_status %}
-                            <option value="{{st.id}}" >{{ st.status }}</option>
-                        {% endfor % %}
-                      </select>
-                    </td>
-                </tr>
+          {% else %}
+          
+          <tr>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <td style="margin-left: auto; margin-right: auto; border: 1px solid black;"><input type="number" style="width: 100px" id="foam_stock" class="form-control foam_stock" value="0"></td>
+            <th style="margin-left: auto; margin-right: auto; border: 1px solid black;" ><input type="number" style="width: 100px" id="hydra_costume" class="form-control hydra_costume" value="0"></th>
+            <th style="margin-left: auto; margin-right: auto; border: 1px solid black;"><input type="number" style="width: 100px" id="motor_pumps_on_repair" class="form-control motor_pumps_on_repair" value="0"></th>
+            <th style="margin-left: auto; margin-right: auto; border: 1px solid black;"><input type="number" style="width: 100px" id="motor_pumps_in_combat" class="form-control motor_pumps_in_combat" value="0"></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            
+          </tr>
+            {% for tran in transports %}
+              <tr>
+                  <td>{{ tran.brand }}</td>
+                  <td>{{ tran.type }}</td>
+                  <td><input type="number" style="width: 75px" class="form-control gsm" id="gsm_{{ tran.id }}" value="{{ tran.gsm_default }}"></td>
+                  <td><input type="number" style="width: 75px" class="form-control foam" id="foam_{{ tran.id }}" value="{{ tran.foam_default }}"></td>
+
+                  <td>{{ tran.trans_model }}</td>
+                  <td>
+                    <select class="form-select selected_trans_status" aria-label="Примечение" id="selectedTransStatus_{{ tran.id }}" style="width: 200px" onchange="detectChange(this)">
+                      <option value="None" selected>В расчете</option>
+                      {% for st in  trans_status %}
+                          <option value="{{st.id}}" >{{ st.status }}</option>
+                      {% endfor % %}
+                    </select>
+                  </td>
+                  <td style="white-space: nowrap">{{ tran.new_number }}</td>
+                  <th></th>
+                  <th></th>
+                  <th></th>
+                  <th></th>
+
+
+                  <td><input type="number" style="width: 75px" id="sleeves77_{{ tran.id }}" class="form-control sleeves_77" value="{{ tran.sleeves_77_default }}"></td>
+                  <td><input type="number" style="width: 75px" id="sleeves66_{{ tran.id }}" class="form-control sleeves_66" value="{{ tran.sleeves_66_default }}"></td>
+                  <td><input type="number" style="width: 75px" id="sleeves51_{{ tran.id }}" class="form-control sleeves_51" value="{{ tran.sleeves_51_default }}"></td>
+
+
+                  <td><input type="number" style="width: 75px" id="fireMonitorsStationary_{{ tran.id }}" class="form-control fire_monitors_stationary" value="{{ tran.fire_monitors_stationary_default }}"></td>
+                  <td><input type="number" style="width: 75px" id="firePonitorsPortable_{{ tran.id }}" class="form-control fire_monitors_portable" value="{{ tran.fire_monitors_portable_default }}"></td>
+
+                  <td><input type="number" style="width: 75px" id="gps600_{{ tran.id }}" class="form-control gps_600" value="{{ tran.gps_600_default }}"></td>
+                  <td><input type="number" style="width: 75px" id="blizzard_{{ tran.id }}" class="form-control blizzard" value="{{ tran.blizzard_default }}"></td>
+                  <td><input type="number" style="width: 75px" id="portableRadios_{{ tran.id }}" class="form-control portable_radios" value="{{ tran.portable_radios_default }}"></td>
+                  <td><input type="number" style="width: 75px" id="flashlight_{{ tran.id }}" class="form-control flashlight" value="{{ tran.flashlight_default }}"></td>
+                  <td><input type="number" style="width: 75px" id="spotlight_{{ tran.id }}" class="form-control spotlight" value="{{ tran.spotlight_default }}"></td>
+                  <td><input type="number" style="width: 75px" id="current_{{ tran.id }}" class="form-control current" value="{{ tran.current_default }}"></td>
+                  <td><input type="number" style="width: 75px" id="l1_{{ tran.id }}" class="form-control l1" value="{{ tran.l1_default }}"></td>
+                  <td><input type="number" style="width: 75px" id="rescue_ropes{{ tran.id }}" class="form-control rescue_ropes" value="{{ tran.rescue_ropes_default }}"></td>
+
+
+
+              </tr>
               {% endfor %}
           {% endif %}
           </tbody>
         </table>
-    <form method="post" id="selected_trans_form" style="display: none;">
+        {% if not line_note_transport %}
+          <form method="post" id="selected_trans_form" style="display: none;">
             {% csrf_token %}
             <input type="text" name="selected_trans_status">
-    </form>
-    <div style="text-align: center;">
-        <button type="button" class="btn btn-primary" id="save_changes_trans">Сохранить</button>
-    </div>
+            <input type="text" name="gsm">
+            <input type="text" name="foam">
+
+
+            <input type="text" name="sleeves_77">
+            <input type="text" name="sleeves_66">
+            <input type="text" name="sleeves_51">
+
+            <input type="text" name="fire_monitors_stationary">
+            <input type="text" name="fire_monitors_portable">
+
+            <input type="text" name="gps_600">
+            <input type="text" name="blizzard">
+            <input type="text" name="portable_radios">
+            <input type="text" name="flashlight">
+            <input type="text" name="spotlight">
+            <input type="text" name="current">
+            <input type="text" name="l1">
+            <input type="text" name="rescue_ropes">
+          </form>
+          <div style="text-align: center;">
+            <button type="button" class="btn btn-primary" id="save_changes_trans">Сохранить</button>
+          </div>
+        {% endif %}
   </div>
 
 
@@ -312,12 +501,25 @@
                                   <input class="form-check-input" type="checkbox" id="selected_switch_person">
                                 </td>
                                   <td aria-label="Выберите должность" id="selected_position">
-                                    {% for pos in  positions %}
-                                      {% if pos.id == staff_member.position_id %}
-                                        <option value="{{ pos.id }}" selected>{{ pos.name }}</option>
-                                      {% endif %}
-                                    {% endfor % %}
+                                    {% if staff_member.position_id in commanders_position_id %}
+                                      <select class="form-select selected_switcher_status" aria-label="Должность на сегодня" id="temp_commanders_positions">
+                                        {% for pos in  commanders_positions %}
+                                          {% if pos.id == staff_member.position_id %}
+                                            <option value="{{pos.id}}" selected>{{ pos.name }}</option>
+                                          {% else %}
+                                            <option value="{{pos.id}}">{{ pos.name }}</option>
+                                          {% endif  %}
+                                        {% endfor % %}
+                                      </select>
+                                    {% else %}
+                                      {% for pos in  positions %}
+                                        {% if pos.id == staff_member.position_id %}
+                                          <option value="{{ pos.id }}" selected>{{ pos.name }}</option>
+                                        {% endif %}
+                                      {% endfor % %}
+                                    {% endif %}
                                   </td>
+                                  
                                   <td aria-label="Выберите сотрудника" id="selected_person">
                                         {% for staff_pers in  staff_members_base %}
                                           {% if staff_member.full_name == staff_pers.full_name %}
@@ -361,6 +563,7 @@
             {% endif %}
           </div>
         </div>
+
         <!-- Modal ADD NEW TRANSPORT-->
         <div class="modal fade" id="add_new_transport" tabindex="-1" aria-labelledby="addNewTransportLabel" aria-hidden="true">
           <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
@@ -397,17 +600,81 @@
     <script>
     $(document).ready(function()
       {
+
         // SET DISPLAY NONE HIDE DEPARTMENT AND SET DEFAULT USER DEPARTMENT ID
         $('#id_department').hide();
         $("label[for='id_department']").hide();
         $('#id_department option[value="{{ user.userinfo.department.id }}"]').attr("selected", "selected");
         // GET ALL STATUS OF TRANSPORT
         $('#save_changes_trans').click(function (){
+          static_values_list = new Array()
+
+          var foam_stock = static_values_list.push(document.getElementById('foam_stock').value);
+          var hydra_costume = static_values_list.push(document.getElementById('hydra_costume').value);
+          var motor_pumps_on_repair = static_values_list.push(document.getElementById('motor_pumps_on_repair').value);
+          var motor_pumps_in_combat = static_values_list.push(document.getElementById('motor_pumps_in_combat').value);
+          console.log(static_values_list)
+
+          if (static_values_list.includes('0'))
+          {
+            window.alert('Вы не заполнини поля внетранспорта');
+          } // true
+          else{
+          var out_of_trans_info = new FormData();
+          out_of_trans_info.append('out_of_trans_info', 'True')
+          out_of_trans_info.append('foam_stock', foam_stock)
+          out_of_trans_info.append('hydra_costume', hydra_costume)
+          out_of_trans_info.append('motor_pumps_on_repair', motor_pumps_on_repair)
+          out_of_trans_info.append('motor_pumps_in_combat', motor_pumps_in_combat)
+          url = window.location.href
+          let out_of_trans_info_xhttp = new XMLHttpRequest();
+          let csrftoken = "{{ csrf_token }}"
+          out_of_trans_info_xhttp.open("POST", url)
+          out_of_trans_info_xhttp.setRequestHeader("X-CSRFToken", csrftoken);
+          out_of_trans_info_xhttp.send(out_of_trans_info)
+          
             let arr = $('select.selected_trans_status').map(function(){
                   return (this.id.split('_')[1] +'|'+ this.value)
               }).get();
+            let gsm = $('input.gsm').map(function(){ return (this.id.split('_')[1] +'|'+ this.value)}).get();
+            let foam = $('input.foam').map(function(){ return (this.id.split('_')[1] +'|'+ this.value)}).get();
+            
+            let sleeves_77 = $('input.sleeves_77').map(function(){return (this.id.split('_')[1] +'|'+ this.value)}).get();
+            let sleeves_66 = $('input.sleeves_66').map(function(){return (this.id.split('_')[1] +'|'+ this.value)}).get();
+            let sleeves_51 = $('input.sleeves_51').map(function(){return (this.id.split('_')[1] +'|'+ this.value)}).get();
+            let fire_monitors_stationary = $('input.fire_monitors_stationary').map(function(){return (this.id.split('_')[1] +'|'+ this.value)}).get();
+            let fire_monitors_portable = $('input.fire_monitors_portable').map(function(){return (this.id.split('_')[1] +'|'+ this.value)}).get();
+            let gps_600 = $('input.gps_600').map(function(){return (this.id.split('_')[1] +'|'+ this.value)}).get();
+            let blizzard = $('input.blizzard').map(function(){return (this.id.split('_')[1] +'|'+ this.value)}).get();
+            let portable_radios = $('input.portable_radios').map(function(){return (this.id.split('_')[1] +'|'+ this.value)}).get();
+            let flashlight = $('input.flashlight').map(function(){return (this.id.split('_')[1] +'|'+ this.value)}).get();
+            let spotlight = $('input.spotlight').map(function(){return (this.id.split('_')[1] +'|'+ this.value)}).get();
+            let current = $('input.current').map(function(){return (this.id.split('_')[1] +'|'+ this.value)}).get();
+            let l1 = $('input.l1').map(function(){return (this.id.split('_')[1] +'|'+ this.value)}).get();
+            let rescue_ropes = $('input.rescue_ropes').map(function(){return (this.id.split('_')[1] +'|'+ this.value)}).get();
+
             $('input[name="selected_trans_status"]').val(arr);
+            $('input[name="gsm"]').val(gsm);
+            $('input[name="foam"]').val(foam);
+
+            $('input[name="sleeves_77"]').val(sleeves_77);
+            $('input[name="sleeves_66"]').val(sleeves_66);
+            $('input[name="sleeves_51"]').val(sleeves_51);
+            
+            $('input[name="fire_monitors_stationary"]').val(fire_monitors_stationary);
+            $('input[name="fire_monitors_portable"]').val(fire_monitors_portable);
+
+            $('input[name="gps_600"]').val(gps_600);
+            $('input[name="blizzard"]').val(blizzard);
+            $('input[name="portable_radios"]').val(portable_radios);
+            $('input[name="flashlight"]').val(flashlight);
+            $('input[name="spotlight"]').val(spotlight);
+            $('input[name="current"]').val(current);
+            $('input[name="l1"]').val(l1);
+            $('input[name="rescue_ropes"]').val(rescue_ropes);
+
             $('#selected_trans_form').submit();
+          }
         });
       });
 
@@ -450,6 +717,51 @@ $('#add_switchers_button').click(function (){
             }  
             });
 });
+
+
+
+$('#add_commander_button').click(function (){
+  const person = document.querySelectorAll(".staff_person_commander");
+  const result_arr = []
+  for (var i = 0 ; i<person.length; i++)
+    {
+      if (person[i].querySelector('#selected_commander').checked)
+        {
+          let selected_position = person[i].querySelector('#temp_commanders_positions option:checked').value;
+          let selected_person = person[i].querySelector('#selected_commander_person option:checked').value;
+          let selected_status = 'None'
+          let selected_gdzs =  person[i].querySelector('#selected_gdzs_commander').checked;
+          var one_person_inf = {"selected_position": selected_position,
+                                "selected_person": selected_person,
+                                "selected_status": selected_status,
+                                "selected_gdzs": selected_gdzs,
+                                }
+          result_arr.push(one_person_inf)
+          
+        }
+      
+    }
+    console.log(result_arr)
+    var jsonText = JSON.stringify(result_arr);
+        $.ajax({
+            type: "POST",
+            725766: "",
+            dataType: "json",
+            data: { selected_position: jsonText,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                  },
+            success: function (response){
+                console.log(response['result']);  
+                window.location.reload();
+              },
+            error: function (response) {
+                // alert the error if any error occured
+                alert(response['responseJSON']['message']);
+            }  
+            });
+});
+
+
 
 
 
@@ -513,6 +825,41 @@ $('#staff_sentry_select').change(function(){
         }
     });
 
+function detectChange(selected_status_to_detect){
+  selected_value_to_check = selected_status_to_detect.value
+  selected_id_to_check = selected_status_to_detect.id
+  const id_to_disable = new Array()
+  id_in_rawid = selected_id_to_check.split('_')[1]
+  id_gsm = id_to_disable.push("gsm_"+ id_in_rawid)
+  id_foam = id_to_disable.push("foam_"+ id_in_rawid)
+  id_sleeves77 = id_to_disable.push("sleeves77_"+ id_in_rawid)
+  id_sleeves66 = id_to_disable.push("sleeves66_"+ id_in_rawid)
+  id_sleeves_51 = id_to_disable.push("sleeves51_"+ id_in_rawid)
+  id_fire_monitors_stationary = id_to_disable.push("fireMonitorsStationary_"+ id_in_rawid)
+  id_fire_monitors_portable = id_to_disable.push("firePonitorsPortable_"+ id_in_rawid)
+  id_gps_600 = id_to_disable.push("gps600_"+ id_in_rawid)
+  id_blizzard = id_to_disable.push("blizzard_"+ id_in_rawid)
+  id_portable_radios = id_to_disable.push("portableRadios_"+ id_in_rawid)
+  id_flashlight = id_to_disable.push("flashlight_"+ id_in_rawid)
+  id_spotlight = id_to_disable.push("spotlight_"+ id_in_rawid)
+  id_current = id_to_disable.push("current_"+ id_in_rawid)
+  id_l1 = id_to_disable.push("l1_"+ id_in_rawid)
+  id_rescue_ropes = id_to_disable.push("rescue_ropes"+ id_in_rawid)
+  if( selected_value_to_check == 2)
+  {
+    console.log(id_to_disable)
+    id_to_disable.forEach(function( item, index){
+      document.getElementById(item).readOnly  = true
+      document.getElementById(item).value = 0
+    });
+  }
+  else{
+    id_to_disable.forEach(function( item, index){
+      document.getElementById(item).readOnly = false
+
+    });
+  }
+}
 
         //
     </script>

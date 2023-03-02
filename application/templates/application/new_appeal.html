@@ -60,7 +60,9 @@ data-bs-backdrop="static" data-bs-keyboard="false">
         </div>
         <div class="col-md-6">
           <label for="address_modal" class="form-label" id="address" >Адрес</label>
-          <input  class="form-control" id="address_modal" name="address" type="text" size="50" onfocusout="departmentFunction()">
+          <input  class="form-control" id="address_modal" name="address" type="text" size="50" >
+          <input  class="form-control" id="lat_hidden" name="lat_hidden" type="text" size="50" style="display: none;">
+          <input  class="form-control" id="long_hidden" name="long_hidden" type="text" size="50" style="display: none;">
       </div>
       <div class="col-md-1">         
         <label for="flat" class="form-label">Дом</label>
@@ -427,27 +429,30 @@ chatSocket = new WebSocket(url)
 
 let form = document.getElementById("address_modal");
 let form2 = document.getElementById("house");
+let lat_hidden = document.getElementById("lat_hidden");
+let long_hidden = document.getElementById("long_hidden");
 
-form.addEventListener('input', (e)=>{
-  let message = form.value;
-  let message2 = form2.value;
-  chatSocket.send(JSON.stringify(
-    {'message': message,
-     'message2': message2,}
-    ))
+// form.addEventListener('input', (e)=>{
+//   let message = form.value;
+//   let message2 = form2.value;
+//   chatSocket.send(JSON.stringify(
+//     {'message': message,
+//      'message2': message2,}
+//     ))
 
-  })
+//   })
 
 
 
-form2.addEventListener('input', (e)=>{
-  let message = form.value;
-  let message2 = form2.value;
-  chatSocket.send(JSON.stringify(
-    {'message': message,
-     'message2': message2}
-    ))
-  })
+// form2.addEventListener('input', (e)=>{
+//   let message = form.value;
+//   let message2 = form2.value;
+
+//   chatSocket.send(JSON.stringify(
+//     {'message': message,
+//      'message2': message2,}
+//     ))
+//   })
 
 function departmentFunction()
   {
@@ -468,19 +473,33 @@ function departmentFunction()
     {
       if (this.readyState == 4 && this.status == 200)
         {
-          let department_text = this.responseText
+          let department_text_raw = this.responseText
+          var response_obj = JSON.parse(department_text_raw);
+          var department_text = response_obj["department_text"]
+          var latitude_temp = response_obj["latitude"]
+          var longitude_temp = response_obj["longitude"]
           console.log(department_text)
-          
+          console.log(latitude_temp)
+          console.log(longitude_temp)
+          chatSocket.send(JSON.stringify(
+          {
+            'message': message1,
+            'message2': message2,
+            'latitude_temp': latitude_temp,
+            'longitude_temp': longitude_temp,}
+          ));
           if (department_text == "Область СПЧ-1")
             {
               $('#department').val('5');
               $('#department').trigger('change'); 
+              
               console.log(1)
             }
             if (department_text == "Область СПЧ-2")
             {
               $('#department').val('6');
               $('#department').trigger('change'); 
+              
               console.log(2)
             }
             if (department_text == "Область СПЧ-3")
@@ -495,7 +514,7 @@ function departmentFunction()
               $('#department').trigger('change'); 
               console.log(4)
             }
-          
+           
         }
     }
   }

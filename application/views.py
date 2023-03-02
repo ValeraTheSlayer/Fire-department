@@ -22,7 +22,7 @@ from io import BytesIO
 from .schedule import scheduler
 from paramiko import SSHClient
 from scp import SCPClient
-from combat_note.models import LineNoteMan, LineNoteTrans
+from combat_note.models import LineNoteMan, LineNoteTrans, StaticValues
 from transport.models import Transport, TransStatus
 from personnel.models import  Staff, Sentry, Position, Status
 
@@ -516,6 +516,7 @@ def line_note_report(request, date_insert):
     # LINE NOTE OF TRANSPORT
     line_note_transport = LineNoteTrans.objects.filter(date_line_note=date_insert,
                                                        department__city=userinfo.city.id)
+    out_of_trans = StaticValues.objects.filter(date_additional_information=date_insert)
     departments = FireDepartment.objects.filter(city=userinfo.city.id)
 
     report = list()
@@ -550,6 +551,27 @@ def line_note_report(request, date_insert):
         # 14 Пожарная техника (В расчете(Марка специального.пожарного автомобиля))
         counting_model = [line.transport.trans_model.model for line in
                           line_note_transport.filter(department=dep, trans_status=None)]
+        counting_gsm = [line.gsm for line in line_note_transport.filter(department=dep, trans_status=None)]
+        counting_foam = [line.foam for line in line_note_transport.filter(department=dep, trans_status=None)]
+
+        counting_sleeves_77 = [line.sleeves_77 for line in line_note_transport.filter(department=dep, trans_status=None)]
+        counting_sleeves_66 = [line.sleeves_66 for line in line_note_transport.filter(department=dep, trans_status=None)]
+        counting_sleeves_51 = [line.sleeves_51 for line in line_note_transport.filter(department=dep, trans_status=None)]
+        counting_fire_monitors_stationary = [line.fire_monitors_stationary for line in line_note_transport.filter(department=dep, trans_status=None)]
+        counting_fire_monitors_portable = [line.fire_monitors_portable for line in line_note_transport.filter(department=dep, trans_status=None)]
+        counting_gps_600 = [line.gps_600 for line in line_note_transport.filter(department=dep, trans_status=None)]
+        counting_blizzard = [line.blizzard for line in line_note_transport.filter(department=dep, trans_status=None)]
+        counting_portable_radios = [line.portable_radios for line in line_note_transport.filter(department=dep, trans_status=None)]
+        counting_flashlight = [line.flashlight for line in line_note_transport.filter(department=dep, trans_status=None)]
+        counting_spotlight = [line.spotlight for line in line_note_transport.filter(department=dep, trans_status=None)]
+        counting_current = [line.current for line in line_note_transport.filter(department=dep, trans_status=None)]
+        counting_l1 = [line.l1 for line in line_note_transport.filter(department=dep, trans_status=None)]
+        counting_rescue_ropes = [line.rescue_ropes for line in line_note_transport.filter(department=dep, trans_status=None)]
+
+        foam_stock = [line.foam_stock for line in out_of_trans.filter(department=dep)]
+        hydra_costume = [line.hydra_costume for line in out_of_trans.filter(department=dep)]
+        motor_pumps_on_repair = [line.motor_pumps_on_repair for line in out_of_trans.filter(department=dep)]
+        motor_pumps_in_combat = [line.motor_pumps_in_combat for line in out_of_trans.filter(department=dep)]
         # 15 Пожарная техника (В резерве(Тип основного пожарного автомобиля))
         reserve_brand = [line.transport.brand.brand for line in line_note_transport.filter(department=dep,
                                                                                            trans_status=reserve_status)]
@@ -557,6 +579,8 @@ def line_note_report(request, date_insert):
         reserve_model = [line.transport.trans_model.model for line in line_note_transport.filter(department=dep,
                                                                                                  trans_status=
                                                                                                  reserve_status)]
+        reserve_gsm = [line.gsm for line in line_note_transport.filter(department=dep, trans_status=reserve_status)]
+
         # 17 Пожарная техника (На ремонте(Тип основного пожарного автомобиля))
         renovation_brand = [line.transport.brand.brand for line in line_note_transport.filter(department=dep,
                                                                                               trans_status=
@@ -564,12 +588,14 @@ def line_note_report(request, date_insert):
         # 18 Пожарная техника (На ремонте(Марка специального.пожарного автомобиля))
         renovation_model = [line.transport.trans_model.model for line in
                             line_note_transport.filter(department=dep, trans_status=renovation_status)]
+
+
         # print('MAXIMUM IS ', max([len(counting_brand), len(reserve_model), len(renovation_model)]))
         # print("RENOVATION is ", counting_brand, counting_model)
         # print("RENOVATION is ", reserve_brand, reserve_model)
         # print("RENOVATION is ", renovation_brand, renovation_model)
         # In order get right rowspan of table in department section we minus one from max
-        tab_row = max([len(counting_model), len(reserve_model), len(renovation_model)]) - 1
+        tab_row = max([len(counting_model), len(reserve_model), len(renovation_model)])
 
         report.append({
             # MAX NUMBER OR ROW OF DEPARTMENT TABLE
@@ -614,14 +640,39 @@ def line_note_report(request, date_insert):
             'counting_brand': counting_brand,
             # 14 Пожарная техника (В расчете(Марка специального.пожарного автомобиля))
             'counting_model': counting_model,
+            'counting_gsm': counting_gsm,
+            'counting_foam': counting_foam,
+            'counting_sleeves_77': counting_sleeves_77,
+            'counting_sleeves_66': counting_sleeves_66,
+            'counting_sleeves_51': counting_sleeves_51,
+            'counting_fire_monitors_stationary': counting_fire_monitors_stationary,
+            'counting_fire_monitors_portable': counting_fire_monitors_portable,
+            'counting_gps_600': counting_gps_600,
+            'counting_blizzard': counting_blizzard,
+            'counting_portable_radios': counting_portable_radios,
+            'counting_flashlight': counting_flashlight,
+            'counting_spotlight': counting_spotlight,
+            'counting_current': counting_current,
+            'counting_l1': counting_l1,
+            'counting_rescue_ropes': counting_rescue_ropes,
+            'foam_stock': foam_stock,
+            'hydra_costume': hydra_costume,
+            'motor_pumps_on_repair': motor_pumps_on_repair,
+            'motor_pumps_in_combat': motor_pumps_in_combat,
+
+
             # 15 Пожарная техника (В резерве(Тип основного пожарного автомобиля))
             'reserve_brand': reserve_brand,
             # 16 Пожарная техника (В резерве(Марка специального.пожарного автомобиля))
             'reserve_model': reserve_model,
+            'reserve_gsm': reserve_gsm,
+
+
             # 17 Пожарная техника (На ремонте(Тип основного пожарного автомобиля))
             'renovation_brand': renovation_brand,
             # 18 Пожарная техника (На ремонте(Марка специального.пожарного автомобиля))
             'renovation_model': renovation_model,
+
         })
 
     # print(report)
@@ -673,12 +724,74 @@ def line_note_main(request, date_insert):
                 transform.save()
         else:
             warning = transform.errors
+    if 'out_of_trans_info' in request.POST:
+        date_additional_information = date_insert
+        foam_stock = request.POST.get('foam_stock')
+        hydra_costume = request.POST.get('hydra_costume')
+        motor_pumps_on_repair = request.POST.get('motor_pumps_on_repair')
+        motor_pumps_in_combat = request.POST.get('motor_pumps_in_combat')
+        line = StaticValues(date_additional_information=date_additional_information,
+                            department=userinfo.department,
+                            foam_stock=foam_stock,
+                            hydra_costume=hydra_costume,
+                            motor_pumps_on_repair=motor_pumps_on_repair,
+                            motor_pumps_in_combat=motor_pumps_in_combat
+                             )
+        existing_len = len(StaticValues.objects.filter(date_additional_information=date_additional_information, department=userinfo.department))
+        if existing_len == 0:
+            line.save()
+
     if 'selected_trans_status' in request.POST:
         selected_trans_status = (request.POST.get('selected_trans_status')).split(',')
-        for sts in selected_trans_status:
-            st = sts.split('|')
+
+        gsm = (request.POST.get('gsm')).split(',')
+        foam = (request.POST.get('foam')).split(',')
+        sleeves_77 = (request.POST.get('sleeves_77')).split(',')
+        sleeves_66 = (request.POST.get('sleeves_66')).split(',')
+        sleeves_51 = (request.POST.get('sleeves_51')).split(',')
+
+        fire_monitors_stationary = (request.POST.get('fire_monitors_stationary')).split(',')
+        fire_monitors_portable = (request.POST.get('fire_monitors_portable')).split(',')
+        gps_600 = (request.POST.get('gps_600')).split(',')
+        blizzard = (request.POST.get('blizzard')).split(',')
+        portable_radios = (request.POST.get('portable_radios')).split(',')
+        flashlight = (request.POST.get('flashlight')).split(',')
+        spotlight = (request.POST.get('spotlight')).split(',')
+        current = (request.POST.get('current')).split(',')
+        l1 = (request.POST.get('l1')).split(',')
+        rescue_ropes = (request.POST.get('rescue_ropes')).split(',')
+
+        def get_value(check_text: str = None):
+            if check_text == '':
+                return 0
+            value = check_text.split('|')[1].replace(' ', '')
+            return_value = value if len(value) >= 1 else 0
+            return int(return_value)
+        #print('selected_trans_status', selected_trans_status)
+        print('gsm', request.POST)
+        for trans_id in range(len(selected_trans_status)):
+            st = selected_trans_status[trans_id].split('|')
+
+            gsm_insert = get_value(gsm[trans_id])
+            foam_insert = get_value(foam[trans_id])
+            sleeves_77_insert = get_value(sleeves_77[trans_id])
+            sleeves_66_insert = get_value(sleeves_66[trans_id])
+            sleeves_51_insert = get_value(sleeves_51[trans_id])
+
+            fire_monitors_stationary_insert = get_value(fire_monitors_stationary[trans_id])
+            fire_monitors_portable_insert = get_value(fire_monitors_portable[trans_id])
+            gps_600_insert = get_value(gps_600[trans_id])
+            blizzard_insert = get_value(blizzard[trans_id])
+            portable_radios_insert = get_value(portable_radios[trans_id])
+            flashlight_insert = get_value(flashlight[trans_id])
+            spotlight_insert = get_value(spotlight[trans_id])
+            current_insert = get_value(current[trans_id])
+            l1_insert = get_value(l1[trans_id])
+            rescue_ropes_insert = get_value(rescue_ropes[trans_id])
+
             # Get transport status
             if st[1] != "None":
+
                 trans_status = TransStatus.objects.get(id=int(st[1]))
             else:
                 trans_status = None
@@ -688,14 +801,47 @@ def line_note_main(request, date_insert):
             try:
                 line = LineNoteTrans.objects.get(date_line_note=date_insert,
                                                  department=userinfo.department,
-                                                 transport=transport)
+                                                 transport=transport,
+
+                                                 gsm=gsm_insert,
+                                                 foam=foam_insert,
+                                                 sleeves_77=sleeves_77_insert,
+                                                 sleeves_66=sleeves_66_insert,
+                                                 sleeves_51=sleeves_51_insert,
+                                                 fire_monitors_stationary=fire_monitors_stationary_insert,
+                                                 fire_monitors_portable=fire_monitors_portable_insert,
+                                                 gps_600=gps_600_insert,
+                                                 blizzard=blizzard_insert,
+                                                 portable_radios=portable_radios_insert,
+                                                 flashlight=flashlight_insert,
+                                                 spotlight=spotlight_insert,
+                                                 current=current_insert,
+                                                 l1=l1_insert,
+                                                 rescue_ropes=rescue_ropes_insert)
                 line.trans_status = trans_status
                 line.save()
             except LineNoteTrans.DoesNotExist:
                 line = LineNoteTrans(date_line_note=date_insert,
                                      department=userinfo.department,
                                      transport=transport,
-                                     trans_status=trans_status)
+                                     trans_status=trans_status,
+                                     gsm=gsm_insert,
+                                     foam=foam_insert,
+
+                                     sleeves_77=sleeves_77_insert,
+                                     sleeves_66=sleeves_66_insert,
+                                     sleeves_51=sleeves_51_insert,
+                                     fire_monitors_stationary=fire_monitors_stationary_insert,
+                                     fire_monitors_portable=fire_monitors_portable_insert,
+                                     gps_600=gps_600_insert,
+                                     blizzard=blizzard_insert,
+                                     portable_radios=portable_radios_insert,
+                                     flashlight=flashlight_insert,
+                                     spotlight=spotlight_insert,
+                                     current=current_insert,
+                                     l1=l1_insert,
+                                     rescue_ropes=rescue_ropes_insert)
+
                 line.save()
 
     if 'staff_unique_id' in request.POST:
@@ -719,8 +865,9 @@ def line_note_main(request, date_insert):
         if existing_user_len == 0:
             s.save()
 
+#    if 'additional_information' in request.POST:
+
     if (request.method == "POST") and ('selected_position' in request.POST):
-        print('ajax_type')
         department = userinfo.department
         selected_position_list = json.loads(request.POST.get('selected_position'))
         for person in selected_position_list:
@@ -781,15 +928,21 @@ def line_note_main(request, date_insert):
 
 
     staff_members_main = Staff.objects.filter(department=userinfo.department, unique_id__in=line_note_list)
-    members_base = []
-
+    commanders_position_id = [5, 6, 7, 8]
+    commanders = Staff.objects.filter(department=userinfo.department, position__in=commanders_position_id).exclude(unique_id__in=line_note_list)
+    commanders_list = [st.unique_id for st in commanders]
     positions = Position.objects.all()
+    commanders_positions = Position.objects.filter(id__in=commanders_position_id)
     status = Status.objects.all()
     trans_status = TransStatus.objects.all()
     karaul = Sentry.objects.all()
     transform = TransportForm()
     all_def_staff = Staff.objects.filter(department=userinfo.department)
     all_def_staff_without_today = Staff.objects.filter(department=userinfo.department).exclude(unique_id__in=line_note_list)
+    try:
+        out_of_trans = StaticValues.objects.filter(department=userinfo.department, date_additional_information=date_insert)[0]
+    except:
+        out_of_trans = {}
     return render(request, 'application/2_line_note_main.html', {
         'userinfo': userinfo,
         'date_insert': date_insert,
@@ -806,6 +959,10 @@ def line_note_main(request, date_insert):
         'warning': warning,
         'all_staff': all_def_staff,
         'all_def_staff_without_today': all_def_staff_without_today,
+        'commanders': commanders,
+        'commanders_positions': commanders_positions,
+        'commanders_position_id': commanders_position_id,
+        'out_of_trans': out_of_trans
     })
 
 

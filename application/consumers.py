@@ -71,7 +71,8 @@ class ChatConsumer(WebsocketConsumer):
         text_data_json = json.loads(text_data)
         message = text_data_json['message']
         message2 = text_data_json['message2']
-
+        latitude_temp = text_data_json['latitude_temp']
+        longitude_temp = text_data_json['longitude_temp']
         print('recive-message:', message)
 
         async_to_sync(self.channel_layer.group_send)(
@@ -80,17 +81,24 @@ class ChatConsumer(WebsocketConsumer):
                 'type': 'chat_message',
                 'message': message,
                 'message2': message2,
+                'latitude_temp': latitude_temp,
+                'longitude_temp': longitude_temp,
             }
         )
 
     def chat_message(self, event):
         message = event['message']
         message2 = event['message2']
+        latitude_temp = event['latitude_temp']
+        longitude_temp = event['longitude_temp']
         print('chat')
         self.send(text_data=json.dumps({
             'type': 'chat',
             'message': message,
             'message2': message2,
+            'latitude_temp': latitude_temp,
+            'longitude_temp': longitude_temp,
+
         }))
 
 
