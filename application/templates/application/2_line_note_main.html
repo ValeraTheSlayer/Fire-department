@@ -609,10 +609,17 @@
         $('#save_changes_trans').click(function (){
           static_values_list = new Array()
 
-          var foam_stock = static_values_list.push(document.getElementById('foam_stock').value);
-          var hydra_costume = static_values_list.push(document.getElementById('hydra_costume').value);
-          var motor_pumps_on_repair = static_values_list.push(document.getElementById('motor_pumps_on_repair').value);
-          var motor_pumps_in_combat = static_values_list.push(document.getElementById('motor_pumps_in_combat').value);
+          var foam_stock = document.getElementById('foam_stock').value;
+          var hydra_costume = document.getElementById('hydra_costume').value;
+          var motor_pumps_on_repair = document.getElementById('motor_pumps_on_repair').value;
+          var motor_pumps_in_combat = document.getElementById('motor_pumps_in_combat').value;
+          static_values_list.push(foam_stock)
+          static_values_list.push(hydra_costume)
+          static_values_list.push(motor_pumps_on_repair)
+          static_values_list.push(motor_pumps_in_combat)
+
+
+
           console.log(static_values_list)
 
           if (static_values_list.includes('0'))
