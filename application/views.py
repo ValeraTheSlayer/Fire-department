@@ -595,7 +595,7 @@ def line_note_report(request, date_insert):
         # print("RENOVATION is ", reserve_brand, reserve_model)
         # print("RENOVATION is ", renovation_brand, renovation_model)
         # In order get right rowspan of table in department section we minus one from max
-        tab_row = max([len(counting_model), len(reserve_model), len(renovation_model)])
+        tab_row = max([len(counting_model), len(reserve_model), len(renovation_model)]) - 1 # Непонятный параметр который влияет на верстрку
 
         report.append({
             # MAX NUMBER OR ROW OF DEPARTMENT TABLE
