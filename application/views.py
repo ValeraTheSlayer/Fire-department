@@ -580,6 +580,7 @@ def line_note_report(request, date_insert):
                                                                                                  trans_status=
                                                                                                  reserve_status)]
         reserve_gsm = [line.gsm for line in line_note_transport.filter(department=dep, trans_status=reserve_status)]
+        reserve_foam= [line.foam for line in line_note_transport.filter(department=dep, trans_status=reserve_status)]
 
         # 17 Пожарная техника (На ремонте(Тип основного пожарного автомобиля))
         renovation_brand = [line.transport.brand.brand for line in line_note_transport.filter(department=dep,
@@ -595,7 +596,7 @@ def line_note_report(request, date_insert):
         # print("RENOVATION is ", reserve_brand, reserve_model)
         # print("RENOVATION is ", renovation_brand, renovation_model)
         # In order get right rowspan of table in department section we minus one from max
-        tab_row = max([len(counting_model), len(reserve_model), len(renovation_model)]) - 1 # Непонятный параметр который влияет на верстрку
+        tab_row = max([len(counting_model), len(reserve_model), len(renovation_model)])  # Непонятный параметр который влияет на верстрку
 
         report.append({
             # MAX NUMBER OR ROW OF DEPARTMENT TABLE
@@ -666,6 +667,7 @@ def line_note_report(request, date_insert):
             # 16 Пожарная техника (В резерве(Марка специального.пожарного автомобиля))
             'reserve_model': reserve_model,
             'reserve_gsm': reserve_gsm,
+            'reserve_foam': reserve_foam,
 
 
             # 17 Пожарная техника (На ремонте(Тип основного пожарного автомобиля))

@@ -154,7 +154,8 @@
                 <tbody>
                 {% for rep in report %}
                     <tr>
-                        <th scope="row" {% if rep.tab_row > -1 %} rowspan="{{ rep.tab_row }}" {% endif %}>{{rep.dep_unique_id}}</th>
+                        <!-- <th scope="row" {% if rep.tab_row > -1 %} rowspan="{{ rep.tab_row }}" {% endif %}>{{rep.dep_unique_id}}</th> -->
+                        <th scope="row" {% if rep.tab_row %} rowspan="{{ rep.tab_row }}" {% endif %}>{{rep.dep_unique_id}}</th>
                         <td>{{ rep.counting_brand | first}}</td>
                         <td>{{ rep.counting_model | first}}</td>
                         <td>{{ rep.counting_gsm | first }}</td>

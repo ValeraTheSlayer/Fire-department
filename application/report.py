@@ -1,5 +1,6 @@
 from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment, Border, Side
+from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+
 from openpyxl.worksheet.dimensions import ColumnDimension
 import string
 
@@ -13,6 +14,7 @@ def create_report(date_insert, res_list):
     ws.title = 'Личный состав'
     # Styles
     ft = Font(bold=True, size=14)
+    ft_2 = Font(bold=True, size=10)
     al = Alignment(horizontal="center", vertical="center", wrap_text=True)
     thick = Side(border_style="thin")
     double = Side(border_style="double")
@@ -43,7 +45,7 @@ def create_report(date_insert, res_list):
     ws.merge_cells('L1:O1')
 
     # Assignment
-    ws['A1'] = 'Наименование пожарных подразделений'
+    ws['A1'] = 'Наименование пожарных подразделений '
     ws['B1'] = 'Штат ПЧ (СПЧ,ПП)'
     ws['C1'] = 'В карауле по списку л/с'
     ws['D1'] = 'Налицо личного состава'
@@ -84,69 +86,200 @@ def create_report(date_insert, res_list):
 
     ws1 = wb.create_sheet("Пожарная техника")
 
-    for col_letter in alphabit[:7]:
+    for col_letter in alphabit[:30]:
         ws1.column_dimensions[col_letter] = ColumnDimension(ws1, bestFit=True, customWidth=True)
         ws1.column_dimensions[col_letter].width = 19
         ws1[col_letter + '1'].border = br
         ws1[col_letter + '2'].border = br
+        ws1[col_letter + '3'].border = br
         ws1[col_letter + '1'].font = ft
         ws1[col_letter + '2'].font = ft
+        ws1[col_letter + '3'].font = ft_2
         ws1[col_letter + '1'].alignment = al
         ws1[col_letter + '2'].alignment = al
+        ws1[col_letter + '3'].alignment = al
+    alphabit_next = ['aa', 'ab']
+    for col_letter in alphabit_next:
+        ws1.column_dimensions[col_letter] = ColumnDimension(ws1, bestFit=True, customWidth=True)
+        ws1.column_dimensions[col_letter].width = 19
+        ws1[col_letter + '1'].border = br
+        ws1[col_letter + '2'].border = br
+        ws1[col_letter + '3'].border = br
+        ws1[col_letter + '1'].font = ft
+        ws1[col_letter + '2'].font = ft
+        ws1[col_letter + '3'].font = ft_2
+        ws1[col_letter + '1'].alignment = al
+        ws1[col_letter + '2'].alignment = al
+        ws1[col_letter + '3'].alignment = al
 
     ws1.row_dimensions[1].height = 20
     ws1.row_dimensions[2].height = 65
 
     # Merge Cells OF HEADER
-    ws1.merge_cells('A1:A2')
 
     # Assignment
     ws1['A1'] = 'Наименование пожарных подразделений'
-    ws1['B1'] = 'В расчете'
-    ws1['B2'] = 'Тип основного пожарного автомобиля'
-    ws1['C2'] = 'Марка специального пожарного автомобиля'
-    ws1['D1'] = 'В резерве'
-    ws1['D2'] = 'Тип основного пожарного автомобиля'
-    ws1['E2'] = 'Марка специального пожарного автомобиля'
-    ws1['F1'] = 'На ремонте'
-    ws1['F2'] = 'Тип основного пожарного автомобиля'
-    ws1['G2'] = 'Марка специального пожарного автомобиля'
+    ws1['B1'] = 'ПОЖАРНАЯ ТЕХНИКА'
 
-    row = 3
+    ws1['B2'] = 'В расчете'
+    ws1['F2'] = 'В резерве'
+    ws1['J2'] = 'На ремонте'
+
+    ws1.merge_cells(f'B{1}:K{1}')
+
+    ws1.merge_cells(f'B{2}:E{2}')
+    ws1.merge_cells(f'F{2}:I{2}')
+    ws1.merge_cells(f'J{2}:K{2}')
+    ws1['b2'].fill = PatternFill(patternType='solid', fgColor='4EADEA')
+    ws1['f2'].fill = PatternFill(patternType='solid', fgColor='FFFF54')
+    ws1['j2'].fill = PatternFill(patternType='solid', fgColor='DF9A9E')
+    ws1.merge_cells(f'A{1}:A{3}')
+
+    ws1.merge_cells('L1:L3')
+    ws1.merge_cells('M1:M3')
+
+    ws1.merge_cells('N1:O2')
+
+    ws1.merge_cells('P1:R2')
+
+    ws1.merge_cells('S1:AB1')
+    ws1.merge_cells('S2:T2')
+
+    ws1.merge_cells('U2:U3')
+    ws1.merge_cells('V2:V3')
+    ws1.merge_cells('W2:W3')
+    ws1.merge_cells('X2:X3')
+    ws1.merge_cells('Y2:Y3')
+    ws1.merge_cells('Z2:Z3')
+    ws1.merge_cells('AA2:AA3')
+    ws1.merge_cells('AB2:AB3')
+
+    ws1['L1'] = 'пена на складе'
+    ws1['M1'] = 'гидрокостюм'
+
+    ws1['N1'] = 'Мотопомбы'
+    ws1['N3'] = 'в боевом расчете'
+    ws1['O3'] = 'на ремонте'
+
+    ws1['P1'] = 'Рукова'
+    ws1['P3'] = '77мм'
+    ws1['Q3'] = '66мм'
+    ws1['R3'] = '51мм'
+
+    ws1['S1'] = 'Вооружение в расчетах'
+    ws1['S2'] = 'Лафетные сволы'
+    ws1['S3'] = 'стационарные'
+    ws1['T3'] = 'переносные'
+
+    ws1['U2'] = 'ГПС-600'
+    ws1['V2'] = '«Пурга»'
+    ws1['W2'] = 'переносные радиостанции'
+    ws1['X2'] = 'электрофонарь'
+    ws1['Y2'] = 'прожектор'
+    ws1['Z2'] = 'ТОК'
+    ws1['AA2'] = 'Л-1'
+    ws1['AB2'] = 'спасательные веревки'
+
+    ws1['B3'] = 'Тип основного пожарного автомобиля'
+    ws1['B3'].fill = PatternFill(patternType='solid', fgColor='4EADEA')
+    ws1['C3'] = 'Марка специального пожарного автомобиля'
+    ws1['C3'].fill = PatternFill(patternType='solid', fgColor='4EADEA')
+    ws1['D3'] = 'ГСМ'
+    ws1['D3'].fill = PatternFill(patternType='solid', fgColor='4EADEA')
+    ws1['E3'] = 'Пена'
+    ws1['E3'].fill = PatternFill(patternType='solid', fgColor='4EADEA')
+
+    ws1['F3'] = 'Тип основного пожарного автомобиля'
+    ws1['F3'].fill = PatternFill(patternType='solid', fgColor='FFFF54')
+    ws1['G3'] = 'Марка специального пожарного автомобиля'
+    ws1['G3'].fill = PatternFill(patternType='solid', fgColor='FFFF54')
+    ws1['H3'] = 'ГСМ'
+    ws1['H3'].fill = PatternFill(patternType='solid', fgColor='FFFF54')
+    ws1['I3'] = 'Пена'
+    ws1['I3'].fill = PatternFill(patternType='solid', fgColor='FFFF54')
+
+    ws1['J3'] = 'Тип основного пожарного автомобиля'
+    ws1['J3'].fill = PatternFill(patternType='solid', fgColor='DF9A9E')
+    ws1['K3'] = 'Марка специального пожарного автомобиля'
+    ws1['K3'].fill = PatternFill(patternType='solid', fgColor='DF9A9E')
+
+
+    row = 4
     for r in res_list:
         tab_row = r['tab_row']
         if tab_row > -1:
             ws1.cell(column=1, row=row, value=r['dep_unique_id']).border = br2
+            try:
+                ws1.cell(column=12, row=row, value=str(r['foam_stock'][0])).border = br2
+            except IndexError:
+                ws1.cell(column=12, row=row, value='').border = br2
+            try:
+                ws1.cell(column=13, row=row, value=str(r['hydra_costume'][0])).border = br2
+            except IndexError:
+                ws1.cell(column=13, row=row, value='').border = br2
+            try:
+                ws1.cell(column=14, row=row, value=str(r['motor_pumps_in_combat'][0])).border = br2
+            except IndexError:
+                ws1.cell(column=14, row=row, value='').border = br2
+            try:
+                ws1.cell(column=15, row=row, value=str(r['motor_pumps_on_repair'][0])).border = br2
+            except IndexError:
+                ws1.cell(column=15, row=row, value='').border = br2
+
 
             inner_row = row
             for i in range(tab_row + 1):
                 try:
                     ws1.cell(column=2, row=inner_row, value=r['counting_brand'][i]).border = br2
                     ws1.cell(column=3, row=inner_row, value=r['counting_model'][i]).border = br2
+                    ws1.cell(column=4, row=inner_row, value=r['counting_gsm'][i]).border = br2
+                    ws1.cell(column=5, row=inner_row, value=r['counting_foam'][i]).border = br2
+
+                    ws1.cell(column=16, row=inner_row, value=r['counting_sleeves_77'][i]).border = br2
+                    ws1.cell(column=17, row=inner_row, value=r['counting_sleeves_66'][i]).border = br2
+                    ws1.cell(column=18, row=inner_row, value=r['counting_sleeves_51'][i]).border = br2
+
+                    ws1.cell(column=19, row=inner_row, value=r['counting_fire_monitors_stationary'][i]).border = br2
+                    ws1.cell(column=20, row=inner_row, value=r['counting_fire_monitors_portable'][i]).border = br2
+                    ws1.cell(column=21, row=inner_row, value=r['counting_gps_600'][i]).border = br2
+                    ws1.cell(column=22, row=inner_row, value=r['counting_blizzard'][i]).border = br2
+                    ws1.cell(column=23, row=inner_row, value=r['counting_portable_radios'][i]).border = br2
+                    ws1.cell(column=24, row=inner_row, value=r['counting_flashlight'][i]).border = br2
+                    ws1.cell(column=25, row=inner_row, value=r['counting_spotlight'][i]).border = br2
+                    ws1.cell(column=26, row=inner_row, value=r['counting_current'][i]).border = br2
+                    ws1.cell(column=27, row=inner_row, value=r['counting_l1'][i]).border = br2
+                    ws1.cell(column=28, row=inner_row, value=r['counting_rescue_ropes'][i]).border = br2
+
                     inner_row += 1
                 except IndexError:
                     ws1.cell(column=2, row=inner_row, value='').border = br2
                     ws1.cell(column=3, row=inner_row, value='').border = br2
-                    inner_row += 1
-            inner_row = row
-            for i in range(tab_row + 1):
-                try:
-                    ws1.cell(column=4, row=inner_row, value=r['reserve_brand'][i]).border = br2
-                    ws1.cell(column=5, row=inner_row, value=r['reserve_model'][i]).border = br2
-                    inner_row += 1
-                except IndexError:
                     ws1.cell(column=4, row=inner_row, value='').border = br2
                     ws1.cell(column=5, row=inner_row, value='').border = br2
                     inner_row += 1
             inner_row = row
             for i in range(tab_row + 1):
                 try:
-                    ws1.cell(column=6, row=inner_row, value=r['renovation_brand'][i]).border = br2
-                    ws1.cell(column=7, row=inner_row, value=r['renovation_model'][i]).border = br2
+                    ws1.cell(column=6, row=inner_row, value=r['reserve_brand'][i]).border = br2
+                    ws1.cell(column=7, row=inner_row, value=r['reserve_model'][i]).border = br2
+                    ws1.cell(column=8, row=inner_row, value=r['reserve_gsm'][i]).border = br2
+                    ws1.cell(column=9, row=inner_row, value=r['reserve_foam'][i]).border = br2
                     inner_row += 1
                 except IndexError:
                     ws1.cell(column=6, row=inner_row, value='').border = br2
                     ws1.cell(column=7, row=inner_row, value='').border = br2
+                    ws1.cell(column=8, row=inner_row, value='').border = br2
+                    ws1.cell(column=9, row=inner_row, value='').border = br2
+                    inner_row += 1
+            inner_row = row
+            for i in range(tab_row + 1):
+                try:
+                    ws1.cell(column=10, row=inner_row, value=r['renovation_brand'][i]).border = br2
+                    ws1.cell(column=11, row=inner_row, value=r['renovation_model'][i]).border = br2
+                    inner_row += 1
+                except IndexError:
+                    ws1.cell(column=10, row=inner_row, value='').border = br2
+                    ws1.cell(column=11, row=inner_row, value='').border = br2
                     inner_row += 1
             row = row + tab_row + 1
         else:
