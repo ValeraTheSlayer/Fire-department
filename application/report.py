@@ -288,6 +288,32 @@ def create_report(date_insert, res_list):
                 ws1.cell(column=i, row=row, value='').border = br2
 
             row += 1
+    empty_departs = ['ПЧ 5',
+                     'ПЧ 6',
+                     'ПЧ 7',
+                     'ПЧ 8',
+                     'ПЧ 9',
+                     'ПЧ 10',
+                     'ПЧ 11',
+                     'ПЧ 12',
+                     'ПЧ 13',
+                     'ПЧ 14',
+                     'ПЧ 15',
+                     'ПЧ 16',
+                     'ПЧ 17',
+                     'ПЧ 18',
+                     'ПЧ 19',
+                     'Тех часть',
+                     'ОСО 10 мкр.',
+                     'Зербулак',
+                     'Каратау',
+                     'Жанатас']
+    row += 1
+    for depart in empty_departs:
+        ws1.cell(column=1, row=row, value=depart).border = br2
+        for col in range(2, 29):
+            ws1.cell(column=col, row=row, value='').border = br2
+        row += 1
 
     wb.save(filename=dest_filename)
 
