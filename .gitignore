@@ -5,7 +5,6 @@ venv
 *.pyc
 __pycache__
 application/static/report
-Dockerfile
 Dockerfile_backup
 docker-compose.yml
 offline.txt

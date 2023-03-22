@@ -1,16 +1,7 @@
 version: "3.3"
 
 services:
-
-  redis:
-    image: redis
-    volumes:
-      - ./:/redis
-    ports:
-      - "6379:6379"
-    restart: always
-
-  web:
+  fire_call_center_web:
     build:
       context: ./
       dockerfile: Dockerfile
@@ -18,33 +9,19 @@ services:
       - ./:/app
     entrypoint:
       - ./entrypoint.sh
-    depends_on:
-      - redis
     ports:
-      - "80:8000"
+      - "8080:8000"  # HOST:container
     restart: always
 
-  nginx:
+  fire_call_center_nginx:
     build:
       context: ./docker/nginx
       dockerfile: Dockerfile
     depends_on:
-      - web
+      - fire_call_center_web
     ports:
-      - "81:81"
-      - "443:443"
+      - "81:81"  # HOST:container
     volumes:
       - ./docker/nginx/certs:/etc/ssl/certs
       - ./application/static:/static
     restart: always
-
-  postgres:
-    image: postgres:latest
-    volumes:
-      - ./postgres_backups:/var/postgres_backups
-    environment:
-      POSTGRES_DB: "call_center"
-      POSTGRES_USER: "call_center_admin"
-      POSTGRES_PASSWORD: "bw4QSm9bMH9qfxXe"
-    ports:
-      - "5432:5432"
