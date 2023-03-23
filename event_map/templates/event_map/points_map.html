@@ -163,13 +163,17 @@ a:hover {
     {
       let map = new ymaps.Map('map-test',{
         center: center,
-        zoom: 16
+        zoom: 12,
+        controls: []
         });
       var searchControl = new ymaps.control.SearchControl({
         options: {
-          provider: 'yandex#search'
+          provider: 'yandex#search',
+          noSelect: false,
+          
                  }
         });
+      map.controls.add(searchControl);
 
       objectManager = new ymaps.ObjectManager({
                                               geoObjectOpenBalloonOnClick: true
@@ -191,7 +195,6 @@ a:hover {
             {
               let text_test = this.responseText
               objectManager.add(text_test);
-              console.log(type_of_points)
             }
           }
         }
@@ -202,7 +205,6 @@ a:hover {
         var results = searchControl.getResultsArray(),
         selected = e.get('index'),
         point = results[selected].geometry.getCoordinates();
-        console.log(point)
       })
       //полигон
       //полигон СПЧ-1
@@ -225,12 +227,10 @@ a:hover {
                 var coordinates_to_polygon = []
                 for (let key of response_obj_keys)
                   {
-                    console.log(response_obj[key]['latitude'], response_obj[key]['longitude'])
                     let one_point = [response_obj[key]['latitude'], response_obj[key]['longitude']]
                     coordinates_to_polygon.unshift(one_point)
                   }
-                  console.log(coordinates_to_polygon)
-                  console.log(typeof coordinates_to_polygon)
+
 
                   const polygon_1 = new ymaps.Polygon([coordinates_to_polygon], {}, {
                     // Курсор в режиме добавления новых вершин.
@@ -280,7 +280,6 @@ a:hover {
                       for (let element of polygon_1_coordinates)
                         {
                           polygon_1_data.append(id_, element)
-                          console.log(element);
                           id_ += 1;
                         }
                       let polygon_1_xhttp = new XMLHttpRequest();
@@ -301,7 +300,6 @@ a:hover {
                     for (let element of polygon_1_coordinates)
                       {
                         polygon_1_data.append(id_, element)
-                        console.log(element);
                         id_ += 1;
                       }
                     let polygon_1_xhttp = new XMLHttpRequest();
@@ -335,12 +333,10 @@ a:hover {
                 var coordinates_to_polygon = []
                 for (let key of response_obj_keys)
                   {
-                    console.log(response_obj[key]['latitude'], response_obj[key]['longitude'])
+
                     let one_point = [response_obj[key]['latitude'], response_obj[key]['longitude']]
                     coordinates_to_polygon.unshift(one_point)
                   }
-                  console.log(coordinates_to_polygon)
-                  console.log(typeof coordinates_to_polygon)
 
                   const polygon_2 = new ymaps.Polygon([coordinates_to_polygon], {}, {
                     // Курсор в режиме добавления новых вершин.
@@ -390,7 +386,6 @@ a:hover {
                       for (let element of polygon_2_coordinates)
                         {
                           polygon_2_data.append(id_, element)
-                          console.log(element);
                           id_ += 1;
                         }
                       let polygon_2_xhttp = new XMLHttpRequest();
@@ -411,7 +406,6 @@ a:hover {
                     for (let element of polygon_2_coordinates)
                       {
                         polygon_2_data.append(id_, element)
-                        console.log(element);
                         id_ += 1;
                       }
                     let polygon_2_xhttp = new XMLHttpRequest();
@@ -446,12 +440,11 @@ a:hover {
                 var coordinates_to_polygon = []
                 for (let key of response_obj_keys)
                   {
-                    console.log(response_obj[key]['latitude'], response_obj[key]['longitude'])
+
                     let one_point = [response_obj[key]['latitude'], response_obj[key]['longitude']]
                     coordinates_to_polygon.unshift(one_point)
                   }
-                  console.log(coordinates_to_polygon)
-                  console.log(typeof coordinates_to_polygon)
+
 
                   const polygon_3 = new ymaps.Polygon([coordinates_to_polygon], {}, {
                     // Курсор в режиме добавления новых вершин.
@@ -501,7 +494,7 @@ a:hover {
                       for (let element of polygon_3_coordinates)
                         {
                           polygon_3_data.append(id_, element)
-                          console.log(element);
+
                           id_ += 1;
                         }
                       let polygon_3_xhttp = new XMLHttpRequest();
@@ -522,7 +515,6 @@ a:hover {
                     for (let element of polygon_3_coordinates)
                       {
                         polygon_3_data.append(id_, element)
-                        console.log(element);
                         id_ += 1;
                       }
                     let polygon_3_xhttp = new XMLHttpRequest();
@@ -557,12 +549,11 @@ a:hover {
                 var coordinates_to_polygon = []
                 for (let key of response_obj_keys)
                   {
-                    console.log(response_obj[key]['latitude'], response_obj[key]['longitude'])
+  
                     let one_point = [response_obj[key]['latitude'], response_obj[key]['longitude']]
                     coordinates_to_polygon.unshift(one_point)
                   }
-                  console.log(coordinates_to_polygon)
-                  console.log(typeof coordinates_to_polygon)
+
 
                   const polygon_4 = new ymaps.Polygon([coordinates_to_polygon], {}, {
                     // Курсор в режиме добавления новых вершин.
@@ -612,7 +603,6 @@ a:hover {
                       for (let element of polygon_4_coordinates)
                         {
                           polygon_4_data.append(id_, element)
-                          console.log(element);
                           id_ += 1;
                         }
                       let polygon_4_xhttp = new XMLHttpRequest();
@@ -633,7 +623,6 @@ a:hover {
                     for (let element of polygon_4_coordinates)
                       {
                         polygon_4_data.append(id_, element)
-                        console.log(element);
                         id_ += 1;
                       }
                     let polygon_4_xhttp = new XMLHttpRequest();
@@ -667,8 +656,7 @@ a:hover {
           }
         }
       function check_response(data){
-        console.log('post')
-        console.log(data)
+
       }
       var coords = e.get('coords');
      // Создаем метку.
@@ -718,12 +706,12 @@ a:hover {
 				  myReverseGeocoder.then(function (res) {
             $('#menu textarea[name="hint_text"]').val(res.geoObjects.get(0).properties.get('text'));
             point_data.append('address', res.geoObjects.get(0).properties.get('text'))
-            console.log(res.geoObjects.get(0).properties.get('text'))
+
 				  });
           // При нажатии на кнопку "Сохранить" изменяем свойства метки
           // значениями, введенными в форме контекстного меню.
           $('#send_location_type_fire').click(function () {
-            console.log("{% url 'point' %}")
+
             xhttp.open("POST", "{% url 'point' %}")
             let csrftoken = "{{ csrf_token }}"
             xhttp.setRequestHeader("X-CSRFToken", csrftoken);
@@ -750,7 +738,7 @@ a:hover {
               });
 
           $('#send_location_type_hydrant ').click(function (e) {
-            console.log("{% url 'point' %}")
+
             xhttp.open("POST", "{% url 'point' %}")
             let csrftoken = "{{ csrf_token }}"
             xhttp.setRequestHeader("X-CSRFToken", csrftoken);
@@ -840,7 +828,7 @@ a:hover {
         point_get_department.append('point_type', 'get_department')
         point_get_department.append('lat', coords[0])
         point_get_department.append('long', coords[1])
-        console.log(coords[0])
+
         xhttp_get_department.send(point_get_department)
         xhttp_get_department.onreadystatechange = function()
         {
@@ -857,7 +845,7 @@ a:hover {
               });
 				  });
           placemark_in_polygon.balloon.open();
-          console.log(typeof this.responseText)
+
         }
         }
 
@@ -870,47 +858,77 @@ chatSocket.onmessage = function(e){
     let data = JSON.parse(e.data)
     if(data.type === 'chat')
     {
-        var messages = document.getElementsByTagName("input")[0];
-        console.log(messages)
-        messages.value = "Казахстан, Тараз, " +data.message +" "+ data.message2
-        console.log("Казахстан, Тараз, " +data.message +" "+ data.message2)
-        console.log(data.latitude_temp)
-        console.log(data.longitude_temp)
+        //var messages = document.getElementsByTagName("input")[0];
+        //var click_find = document.getElementsByTagName("input")[0];
+        //console.log(messages)
+       // messages.value = "Казахстан, Тараз, " +data.message +" "+ data.message2
+       // console.log("Казахстан, Тараз, " +data.message +" "+ data.message2)
+        // console.log(data.latitude_temp)
+        // console.log(data.longitude_temp)
+        // console.log(data.message)
+        // console.log(data.message2)
 
-        var socket_placemark = new ymaps.Placemark([data.latitude_temp, data.longitude_temp], {}, 
-        {
-          // Красная иконка, растягивающаяся под содержимое.
-          preset: "islands#redStretchyIcon",
-          iconLayout: 'default#image',
-        });
-        socket_placemark.properties.set({
-                balloonContentHeader: 'Пожар',
-                balloonContentBody : '<b>Адрес:</b> ' + data.message +" "+ data.message2 +'<br/>' ,
-                balloonContentFooter: "<b>Дата:</b>",
-                hintContent: this.responseText
-              });
         
-        projection =  map.options.get('projection'),
+        searchControl.search("Казахстан, Тараз, " +data.message +" "+ data.message2);
+        //searchControl.showResult(0)
+        // map.setCenter(socket_placemark.geometry.getCoordinates(), 50, {
+        //         duration: 150000,
+        // globalPixel = projection.toGlobalPixels([data.latitude_temp, data.longitude_temp], map.getZoom()),
 
-        globalPixel = projection.toGlobalPixels([data.latitude_temp, data.longitude_temp], map.getZoom()),
+        // size = map.container.getSize();
+        //searchControl.showResult(0);
+        // var geo = socket_placemark.geometry.getCoordinates()
 
-        size = map.container.getSize();
+        // projection =  map.options.get('projection')
 
-        // map.panTo(projection.fromGlobalPixels([globalPixel[0], (globalPixel[1] - size[1]/2 +10) ], map.getZoom()),
+        // globalPixel = projection.toGlobalPixels(geo, map.getZoom())
 
-          // {delay: 0, callback: function() {
 
-          //   socket_placemark.balloon.open();
 
-          // }});
+        // var socket_placemark = new ymaps.Placemark([data.latitude_temp, data.longitude_temp], {}, 
+        //     {
+        //       balloonPanelMaxMapArea: 0,
+        //       iconLayout: 'default#image',
+        //       iconImageHref: "{% static 'images/fire.png' %}",
+        //       iconImageSize: [50, 50],
+        //       iconImageOffset: [-10, -20]
+        //     });
+        //     socket_placemark.properties.set({
+        //             balloonContentHeader: 'Пожар',
+        //             balloonContentBody : '<b>Адрес:</b> ' + data.message +" "+ data.message2 +'<br/>' ,
+        //             balloonContentFooter: "<b>Дата:</b>",
+        //             hintContent: this.responseText
+        //           });
+        // map.geoObjects.add(socket_placemark)
+
+        // map.options.set('maxAnimationZoomDifference', Infinity);
+        // map.setZoom(17,{duration:200}).then(() => map.setZoom(30,{duration:500}));
+
+        // var balloon = new ymaps.Balloon(map);
+        // balloon.options.setParent(map.options);
+        // balloon.open([data.latitude_temp, data.longitude_temp]);
+              
+
+
+          // var clusterer = new ymaps.Clusterer();
+          // clusterer.getObjectState(socket_placemark).cluster.state.set('activeObject', socket_placemark);
+          // var geoObjectState = clusterer.getObjectState(socket_placemark);
+
+          // map.balloon.open([data.latitude_temp, data.longitude_temp],{},
+          //    {
+          //     balloonContentHeader: 'Пожар',
+          //     balloonContentBody : '<b>Адрес:</b> ' + data.message +" "+ data.message2 +'<br/>' ,
+          //     balloonContentFooter: "<b>Дата:</b>",
+          //     //hintContent: this.responseText
+          //     });
         
-        // var pixelCenter = map.getGlobalPixelCenter([data.latitude_temp, data.longitude_temp]);
-        // console.log(pixelCenter)
-        // map.setCenter([data.latitude_temp, data.longitude_temp], 15, {
-        //   duration: 15000});
+        // map.setCenter(socket_placemark.geometry.getCoordinates(), 50, {
+        //   duration: 150000,
+        //   callback: function(){socket_placemark.balloon.open()}});
     }
  }
 }
+
 ymaps.ready(init);
 
  
