@@ -77,7 +77,7 @@ def history_points(request):
                                                    "hintContent": 'Подробности метки пожар',
                                                    },
                                    "options": {"iconLayout": 'default#image',
-                                               "iconImageHref": "http://localhost/static/images/fire.png"
+                                               "iconImageHref": "http://192.168.88.252/static/images/fire.png"
                                                 },
                                     }
                 fire_response_list.append(fire_point_dict)
@@ -96,7 +96,7 @@ def history_points(request):
                                                    "hintContent": 'Подробности метки Гидрант',
                                                    },
                                    "options": {"iconLayout": 'default#image',
-                                               "iconImageHref": "http://localhost/static/images/hydrant1.png"
+                                               "iconImageHref": "http://192.168.88.252/static/images/hydrant1.png"
                                                 },
                                     }
                 hydrant_response_list.append(hydrant_point_dict)
@@ -115,7 +115,7 @@ def history_points(request):
                                                      "hintContent": 'Подробности метки Гидрант',
                                                      },
                                       "options": {"iconLayout": 'default#image',
-                                                  "iconImageHref": "http://localhost/static/images/home.png"
+                                                  "iconImageHref": "http://192.168.88.252/static/images/home.png"
                                                   },
                                       }
                 secure_response_list.append(secure_point_dict)
