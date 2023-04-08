@@ -25,7 +25,6 @@ hyperlink==21.0.0
 idna==2.10
 incremental==21.3.0
 openpyxl==3.0.7
-pandas==1.3.4
 paramiko==2.8.0
 psycopg2-binary==2.8.6
 pyasn1==0.4.8
