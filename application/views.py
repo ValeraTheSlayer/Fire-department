@@ -1,12 +1,18 @@
 # -*- coding: utf-8 -*-
 import json
+import tempfile
+
+import openpyxl
 from django.contrib.auth.models import User
 from django.db.models import Count, Max
 from django.shortcuts import render, redirect, HttpResponse
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.http import FileResponse
+from django.http import FileResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from openpyxl.styles import Font, Border, Side, Alignment
+from openpyxl.utils import get_column_letter
+
 import emergency
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -17,14 +23,14 @@ from .forms import *
 from .filters import *
 from .report import create_report, create_report_emergency
 import os
-import pandas as pd
+from openpyxl import Workbook
 from io import BytesIO
 from .schedule import scheduler
 from paramiko import SSHClient
 from scp import SCPClient
 from combat_note.models import LineNoteMan, LineNoteTrans, StaticValues
 from transport.models import Transport, TransStatus
-from personnel.models import  Staff, Sentry, Position, Status
+from personnel.models import Staff, Sentry, Position, Status
 
 from emergency.filters import CurrentEmergencyFilter
 
@@ -33,14 +39,13 @@ from django.http import JsonResponse
 from django.views.generic import View
 from .process import html_to_pdf
 
-#from .models import DefaultEvent, JournalEvent
+# from .models import DefaultEvent, JournalEvent
 # from emergency.models import JournalEvent, DefaultEvent
-#from emergency.filters import CurrentEmergencyFilter
+# from emergency.filters import CurrentEmergencyFilter
 
 from .forms import TransportForm
 from django.http import JsonResponse
 from django.core import serializers
-
 
 channel_layer = get_channel_layer()
 
@@ -48,7 +53,6 @@ channel_layer = get_channel_layer()
 SERVER = '10.180.210.87'
 USERNAME = 'root'
 PASSWORD = 'passw0rd13!'
-
 
 channel_layer = get_channel_layer()
 
@@ -66,12 +70,14 @@ def download_file(request, pk):
     response = FileResponse(fl)
     return response
 
+
 def save_income_voice(unique_id):
-    #print(datetime.now())
+    # print(datetime.now())
     data = ApiData.objects.get(unique_id=unique_id)
     date_of_call = str(data.start_time.date()).replace('-', '/')
     ssh = SSHClient()
-    ssh.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
+    ssh.load_host_keys(
+        os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
     ssh.connect(SERVER, username=USERNAME, password=PASSWORD)
     ftp = ssh.open_sftp()
     path_folder = '/var/spool/asterisk/monitor/' + date_of_call + '/'
@@ -87,6 +93,7 @@ def save_income_voice(unique_id):
             data.downloaded = True
             data.save()
 
+
 @login_required(login_url='/accounts/login/')
 def current_emergency(request):
     user_ = UserInfo.objects.get(user=request.user)
@@ -95,8 +102,10 @@ def current_emergency(request):
     # GIVEN ANSWER TO QUESTION
     if 'answer_to_short_question' in request.POST:
         answer_to_short_question = request.POST.get('answer_to_short_question')
-        appeal_id_of_modal_after_answer = request.POST.get('appeal_modal_id_is')
-        responsible_department_person_modal = request.POST.get('responsible_department_person_modal')
+        appeal_id_of_modal_after_answer = request.POST.get(
+            'appeal_modal_id_is')
+        responsible_department_person_modal = request.POST.get(
+            'responsible_department_person_modal')
         callback_number_modal = request.POST.get('callback_number_modal', None)
         citizenship_modal = request.POST.get('citizenship_modal')
         iin_modal = request.POST.get('iin_modal')
@@ -119,7 +128,8 @@ def current_emergency(request):
         #       )
 
         if answer_to_short_question and responsible_department_person_modal:
-            appeal = CurrentAppeal.objects.get(id=int(appeal_id_of_modal_after_answer))
+            appeal = CurrentAppeal.objects.get(
+                id=int(appeal_id_of_modal_after_answer))
             appeal.answer_to_short_question = answer_to_short_question
             appeal.responsible_department_person = responsible_department_person_modal
             appeal.callback_number = callback_number_modal
@@ -133,8 +143,11 @@ def current_emergency(request):
             appeal.save()
     # OPEN MODAL WITH CONTENT THIS APPEAL
     if 'appeal_input_id' in request.POST:
-        appeal_id_of_modal = int(request.POST.get('appeal_input_id').split('_')[1])
-        count_call_number_modal = len(CurrentAppeal.objects.filter(income_call_number=CurrentAppeal.objects.get(id=appeal_id_of_modal).income_call_number))
+        appeal_id_of_modal = int(
+            request.POST.get('appeal_input_id').split('_')[1])
+        count_call_number_modal = len(CurrentAppeal.objects.filter(
+            income_call_number=CurrentAppeal.objects.get(
+                id=appeal_id_of_modal).income_call_number))
 
     # CREATED NEW APPEAL
     if 'short_question' in request.POST:
@@ -156,7 +169,8 @@ def current_emergency(request):
         question_category = request.POST.get('question_category')
         status = request.POST.get('status')
 
-        responsible_department_person = request.POST.get('responsible_department_person')
+        responsible_department_person = request.POST.get(
+            'responsible_department_person')
         address = request.POST.get('address')
         emergency_rank = request.POST.get('emergency_rank')
         object_owner = request.POST.get('object_owner')
@@ -171,16 +185,18 @@ def current_emergency(request):
             time_of_call = str(datetime.now().time().strftime("%H:%M:%S"))
 
             try:
-                unique_id = float(ApiData.objects.all().order_by('-unique_id')[0].unique_id) + 1
+                unique_id = float(ApiData.objects.all().order_by('-unique_id')[
+                                      0].unique_id) + 1
             except:
                 unique_id = 1
 
             api = ApiData.objects.create(
-                start_time=datetime.strptime(date_of_call + ' ' + time_of_call, '%d.%m.%Y %H:%M:%S'),
+                start_time=datetime.strptime(date_of_call + ' ' + time_of_call,
+                                             '%d.%m.%Y %H:%M:%S'),
                 number_in=income_call_number,
                 user=user_,
                 unique_id=str(unique_id),
-                )
+            )
             api_unique_id = api.unique_id
         else:
             api_unique_id = request.POST.get('api_unique_id')
@@ -192,8 +208,10 @@ def current_emergency(request):
         # Time handling
         if not time_of_call_end:
             time_of_call_end = time_of_call
-        date_time_of_call_start = datetime.strptime(date_of_call + ' ' + time_of_call, '%d.%m.%Y %H:%M:%S')
-        date_time_of_call_end = datetime.strptime(date_of_call + ' ' + time_of_call_end, '%d.%m.%Y %H:%M:%S')
+        date_time_of_call_start = datetime.strptime(
+            date_of_call + ' ' + time_of_call, '%d.%m.%Y %H:%M:%S')
+        date_time_of_call_end = datetime.strptime(
+            date_of_call + ' ' + time_of_call_end, '%d.%m.%Y %H:%M:%S')
         # Post and city handling
         if borderpost:
             borderpost = BorderPost.objects.get(id=int(borderpost))
@@ -214,9 +232,11 @@ def current_emergency(request):
             emergency_type = EmergencyType.objects.get(id=int(emergency_type))
         if object_category:
             try:
-                object_category = ObjectCategory.objects.get(id=int(object_category))
+                object_category = ObjectCategory.objects.get(
+                    id=int(object_category))
             except:
-                object_category = ObjectCategory.objects.create(name=object_category)
+                object_category = ObjectCategory.objects.create(
+                    name=object_category)
 
         if responsible_department_person:
             person = Staff.objects.get(id=int(responsible_department_person))
@@ -241,7 +261,8 @@ def current_emergency(request):
             house=house,
             flat=flat,
             email=email,
-            question_category=QuestionCategory.objects.get(id=int(question_category)),
+            question_category=QuestionCategory.objects.get(
+                id=int(question_category)),
             short_question=short_question,
             responsible_department=responsible_depart,
             status=status,
@@ -254,16 +275,15 @@ def current_emergency(request):
             object_category=object_category,
             responsible_department_person=responsible_department_person,
 
-
         )
         b.save()
         if department:
-            for  item in department:
+            for item in department:
                 b.department.add(FireDepartment.objects.get(id=int(item)))
         if transport:
             for item in transport:
                 b.transport.add(Transport.objects.get(id=int(item)))
-                #department_list.append(FireDepartment.objects.get(id=int(item)))
+                # department_list.append(FireDepartment.objects.get(id=int(item)))
         return redirect('current_emergencies')
 
     city = City.objects.all()
@@ -290,22 +310,15 @@ def current_emergency(request):
     else:
         cur_appeal_modal = appeal_id_of_modal
 
-
     transport = Transport.objects.all()
     departaments = FireDepartment.objects.all()
-
-
-
 
     bosses = Staff.objects.filter(position__name='Начальник')
     # boss = LineNoteMan.objects.get(date_line_note=datetime.now().date(), position__name = 'Начальник')
 
-
-
     emergency_types = EmergencyType.objects.all()
     object_categories = ObjectCategory.objects.all()
     emergency_ranks = EmergencyRank.objects.all()
-
 
     diff_time = timedelta(hours=1)
     return render(request, 'application/1_current_appeal.html', {
@@ -320,42 +333,44 @@ def current_emergency(request):
         'departaments': departaments,
         'transport': transport,
         'bosses': bosses,
-        #'boss': boss,
+        # 'boss': boss,
         'emergency_types': emergency_types,
         'object_categories': object_categories,
         'emergency_ranks': emergency_ranks,
-        #'object_owner': object_owner,
+        # 'object_owner': object_owner,
     })
-
 
 
 @login_required(login_url='/accounts/login/')
 def current_appear_archive(request):
-
     user_ = UserInfo.objects.get(user=request.user)
 
     date_for_search = date.today()
     if request.path == '/main_page/archive/':
-        cur_emg = CurrentAppeal.objects.filter(user_created_event__city=user_.city,
-            date_of_call_start__lte = date_for_search
+        cur_emg = CurrentAppeal.objects.filter(
+            user_created_event__city=user_.city,
+            date_of_call_start__lte=date_for_search
         ).order_by('-id')
     else:
-        #date_for_search = datetime.today() - timedelta(days=2)
+        # date_for_search = datetime.today() - timedelta(days=2)
 
-        cur_emg = CurrentAppeal.objects.filter(user_created_event__city=user_.city,
-                  date_of_call_start__contains = date_for_search
-                  ).order_by('-id')
-        #print(date_for_search)
+        cur_emg = CurrentAppeal.objects.filter(
+            user_created_event__city=user_.city,
+            date_of_call_start__contains=date_for_search
+        ).order_by('-id')
+        # print(date_for_search)
 
     date_range_filter = request.GET.get('dateRangeFilter')
     datetime_before, datetime_after = None, None
     if date_range_filter:
-        datetime_before = datetime.strptime(date_range_filter.split(' - ')[0], '%d/%m/%Y %H:%M')
-        datetime_after = datetime.strptime(date_range_filter.split(' - ')[1], '%d/%m/%Y %H:%M')
-        cur_emg = cur_emg.filter(date_of_call_start__range=[datetime_before, datetime_after])
+        datetime_before = datetime.strptime(date_range_filter.split(' - ')[0],
+                                            '%d/%m/%Y %H:%M')
+        datetime_after = datetime.strptime(date_range_filter.split(' - ')[1],
+                                           '%d/%m/%Y %H:%M')
+        cur_emg = cur_emg.filter(
+            date_of_call_start__range=[datetime_before, datetime_after])
 
     cur_filter = CurrentEmergencyFilter(request.GET, queryset=cur_emg)
-
 
     # cur_appeal = CurrentAppeal.objects.all().order_by('-id')
     # cur_appeal_filter = CurrentAppealFilter(request.GET, queryset=cur_appeal)
@@ -367,8 +382,6 @@ def current_appear_archive(request):
     #     cur_appeal = paginator.page(1)
     # except EmptyPage:
     #     cur_appeal = paginator.page(paginator.num_pages)
-
-
 
     question_category = QuestionCategory.objects.all()
     transport = Transport.objects.all()
@@ -385,20 +398,21 @@ def current_appear_archive(request):
         'filter': cur_filter,
         'datetime_before': datetime_before,
         'datetime_after': datetime_after,
-        'departaments' : departaments,
+        'departaments': departaments,
         'transport': transport,
         'bosses': bosses,
-        'emergency_types' : emergency_types,
-        'object_categories' : object_categories,
+        'emergency_types': emergency_types,
+        'object_categories': object_categories,
         'emergency_ranks': emergency_ranks,
         'question_category': question_category,
         'transport': transport,
 
     })
 
-def current_emergiencies(request):
 
+def current_emergiencies(request):
     return render(request, 'application/current_emergencies.html', context={})
+
 
 @login_required(login_url='/accounts/login/')
 def current_emergency_edit(request, cur_emg_id):
@@ -410,8 +424,10 @@ def current_emergency_edit(request, cur_emg_id):
             cur_emg.income_call_name = request.POST.get('income_call_name')
             cur_emg.address = request.POST.get('address')
             cur_emg.house_kv = request.POST.get('house_kv')
-            cur_emg.emergency_type = EmergencyType.objects.get(id=int(request.POST.get('emergency_type')))
-            cur_emg.emergency_rank = EmergencyRank.objects.get(id=int(request.POST.get('emergency_rank')))
+            cur_emg.emergency_type = EmergencyType.objects.get(
+                id=int(request.POST.get('emergency_type')))
+            cur_emg.emergency_rank = EmergencyRank.objects.get(
+                id=int(request.POST.get('emergency_rank')))
             department = request.POST.getlist('department')
             cur_emg.department.clear()
             for dep in department:
@@ -466,7 +482,8 @@ def journal_event(request, pk, status):
     if 'new_event' in request.POST:
         date_insert = datetime.now()
         new_event = request.POST.get('new_event')
-        b = JournalEvent(emergency=cur_emg, event=new_event, date_insert=date_insert)
+        b = JournalEvent(emergency=cur_emg, event=new_event,
+                         date_insert=date_insert)
         b.save()
     default_events = DefaultEvent.objects.all()
     event_list = JournalEvent.objects.filter(emergency=cur_emg).order_by('-id')
@@ -480,7 +497,6 @@ def journal_event(request, pk, status):
 
 @login_required(login_url='/accounts/login/')
 def line_note(request):
-
     userinfo = UserInfo.objects.get(user=request.user)
 
     if 'date_line_note' in request.POST:
@@ -490,14 +506,17 @@ def line_note(request):
             if date_insert == str(datetime.now().date()):
                 return redirect('line_note_main', date_insert=date_insert)
             else:
-                if not (LineNoteMan.objects.filter(date_line_note=date_insert, position__main_position=False) or
-                        LineNoteTrans.objects.filter(date_line_note=date_insert)):
+                if not (LineNoteMan.objects.filter(date_line_note=date_insert,
+                                                   position__main_position=False) or
+                        LineNoteTrans.objects.filter(
+                            date_line_note=date_insert)):
                     return render(request, 'application/2_line_note.html', {
                         'userinfo': userinfo,
                         'warning': 'Нету данных'
                     })
                 else:
-                    return redirect('line_note_record', date_insert=date_insert)
+                    return redirect('line_note_record',
+                                    date_insert=date_insert)
         elif userinfo.user.has_perm('application.user_main_call_center_city'):
             return redirect('line_note_report', date_insert=date_insert)
 
@@ -506,24 +525,28 @@ def line_note(request):
     })
 
 
-
 @login_required(login_url='/accounts/login/')
 def line_note_report(request, date_insert):
     userinfo = UserInfo.objects.get(user=request.user)
     # LINE NOTE OF STAFF
-    line_note_staff_base = LineNoteMan.objects.filter(date_line_note=date_insert, position__main_position=False,
-                                                      staff__department__city=userinfo.city.id)
+    line_note_staff_base = LineNoteMan.objects.filter(
+        date_line_note=date_insert, position__main_position=False,
+        staff__department__city=userinfo.city.id)
     # LINE NOTE OF TRANSPORT
-    line_note_transport = LineNoteTrans.objects.filter(date_line_note=date_insert,
-                                                       department__city=userinfo.city.id)
-    out_of_trans = StaticValues.objects.filter(date_additional_information=date_insert)
+    line_note_transport = LineNoteTrans.objects.filter(
+        date_line_note=date_insert,
+        department__city=userinfo.city.id)
+    out_of_trans = StaticValues.objects.filter(
+        date_additional_information=date_insert)
     departments = FireDepartment.objects.filter(city=userinfo.city.id)
 
     report = list()
     # Для 3 Налицо личного состава (Начальники караулов)
-    head_list = [pos.id for pos in Position.objects.filter(name__startswith='НАЧАЛЬНИК')]
+    head_list = [pos.id for pos in
+                 Position.objects.filter(name__startswith='НАЧАЛЬНИК')]
     # Для 4 Налицо личного состава (Командиры отделений)
-    commander_list = [pos.id for pos in Position.objects.filter(name__startswith='Командир')]
+    commander_list = [pos.id for pos in
+                      Position.objects.filter(name__startswith='Командир')]
     # Для 5 Налицо личного состава (Водители)
     driver = Position.objects.get(name='Водитель')
     # Для 6 Налицо личного состава (Пожарный)
@@ -546,97 +569,157 @@ def line_note_report(request, date_insert):
     renovation_status = TransStatus.objects.get(status='На ремонте')
     for dep in departments:
         # 13 Пожарная техника (В расчете(Тип основного пожарного автомобиля))
-        counting_brand = [line.transport.brand.brand for line in line_note_transport.filter(department=dep,
-                                                                                            trans_status=None)]
+        counting_brand = [line.transport.brand.brand for line in
+                          line_note_transport.filter(department=dep,
+                                                     trans_status=None)]
         # 14 Пожарная техника (В расчете(Марка специального.пожарного автомобиля))
         counting_model = [line.transport.trans_model.model for line in
-                          line_note_transport.filter(department=dep, trans_status=None)]
-        counting_gsm = [line.gsm for line in line_note_transport.filter(department=dep, trans_status=None)]
-        counting_foam = [line.foam for line in line_note_transport.filter(department=dep, trans_status=None)]
+                          line_note_transport.filter(department=dep,
+                                                     trans_status=None)]
+        counting_gsm = [line.gsm for line in
+                        line_note_transport.filter(department=dep,
+                                                   trans_status=None)]
+        counting_foam = [line.foam for line in
+                         line_note_transport.filter(department=dep,
+                                                    trans_status=None)]
 
-        counting_sleeves_77 = [line.sleeves_77 for line in line_note_transport.filter(department=dep, trans_status=None)]
-        counting_sleeves_66 = [line.sleeves_66 for line in line_note_transport.filter(department=dep, trans_status=None)]
-        counting_sleeves_51 = [line.sleeves_51 for line in line_note_transport.filter(department=dep, trans_status=None)]
-        counting_fire_monitors_stationary = [line.fire_monitors_stationary for line in line_note_transport.filter(department=dep, trans_status=None)]
-        counting_fire_monitors_portable = [line.fire_monitors_portable for line in line_note_transport.filter(department=dep, trans_status=None)]
-        counting_gps_600 = [line.gps_600 for line in line_note_transport.filter(department=dep, trans_status=None)]
-        counting_blizzard = [line.blizzard for line in line_note_transport.filter(department=dep, trans_status=None)]
-        counting_portable_radios = [line.portable_radios for line in line_note_transport.filter(department=dep, trans_status=None)]
-        counting_flashlight = [line.flashlight for line in line_note_transport.filter(department=dep, trans_status=None)]
-        counting_spotlight = [line.spotlight for line in line_note_transport.filter(department=dep, trans_status=None)]
-        counting_current = [line.current for line in line_note_transport.filter(department=dep, trans_status=None)]
-        counting_l1 = [line.l1 for line in line_note_transport.filter(department=dep, trans_status=None)]
-        counting_rescue_ropes = [line.rescue_ropes for line in line_note_transport.filter(department=dep, trans_status=None)]
+        counting_sleeves_77 = [line.sleeves_77 for line in
+                               line_note_transport.filter(department=dep,
+                                                          trans_status=None)]
+        counting_sleeves_66 = [line.sleeves_66 for line in
+                               line_note_transport.filter(department=dep,
+                                                          trans_status=None)]
+        counting_sleeves_51 = [line.sleeves_51 for line in
+                               line_note_transport.filter(department=dep,
+                                                          trans_status=None)]
+        counting_fire_monitors_stationary = [line.fire_monitors_stationary for
+                                             line in
+                                             line_note_transport.filter(
+                                                 department=dep,
+                                                 trans_status=None)]
+        counting_fire_monitors_portable = [line.fire_monitors_portable for line
+                                           in line_note_transport.filter(
+                department=dep, trans_status=None)]
+        counting_gps_600 = [line.gps_600 for line in
+                            line_note_transport.filter(department=dep,
+                                                       trans_status=None)]
+        counting_blizzard = [line.blizzard for line in
+                             line_note_transport.filter(department=dep,
+                                                        trans_status=None)]
+        counting_portable_radios = [line.portable_radios for line in
+                                    line_note_transport.filter(department=dep,
+                                                               trans_status=None)]
+        counting_flashlight = [line.flashlight for line in
+                               line_note_transport.filter(department=dep,
+                                                          trans_status=None)]
+        counting_spotlight = [line.spotlight for line in
+                              line_note_transport.filter(department=dep,
+                                                         trans_status=None)]
+        counting_current = [line.current for line in
+                            line_note_transport.filter(department=dep,
+                                                       trans_status=None)]
+        counting_l1 = [line.l1 for line in
+                       line_note_transport.filter(department=dep,
+                                                  trans_status=None)]
+        counting_rescue_ropes = [line.rescue_ropes for line in
+                                 line_note_transport.filter(department=dep,
+                                                            trans_status=None)]
 
-        foam_stock = [line.foam_stock for line in out_of_trans.filter(department=dep)]
-        hydra_costume = [line.hydra_costume for line in out_of_trans.filter(department=dep)]
-        motor_pumps_on_repair = [line.motor_pumps_on_repair for line in out_of_trans.filter(department=dep)]
-        motor_pumps_in_combat = [line.motor_pumps_in_combat for line in out_of_trans.filter(department=dep)]
+        foam_stock = [line.foam_stock for line in
+                      out_of_trans.filter(department=dep)]
+        hydra_costume = [line.hydra_costume for line in
+                         out_of_trans.filter(department=dep)]
+        motor_pumps_on_repair = [line.motor_pumps_on_repair for line in
+                                 out_of_trans.filter(department=dep)]
+        motor_pumps_in_combat = [line.motor_pumps_in_combat for line in
+                                 out_of_trans.filter(department=dep)]
         # 15 Пожарная техника (В резерве(Тип основного пожарного автомобиля))
-        reserve_brand = [line.transport.brand.brand for line in line_note_transport.filter(department=dep,
-                                                                                           trans_status=reserve_status)]
+        reserve_brand = [line.transport.brand.brand for line in
+                         line_note_transport.filter(department=dep,
+                                                    trans_status=reserve_status)]
         # 16 Пожарная техника (В резерве(Марка специального.пожарного автомобиля))
-        reserve_model = [line.transport.trans_model.model for line in line_note_transport.filter(department=dep,
-                                                                                                 trans_status=
-                                                                                                 reserve_status)]
-        reserve_gsm = [line.gsm for line in line_note_transport.filter(department=dep, trans_status=reserve_status)]
-        reserve_foam= [line.foam for line in line_note_transport.filter(department=dep, trans_status=reserve_status)]
+        reserve_model = [line.transport.trans_model.model for line in
+                         line_note_transport.filter(department=dep,
+                                                    trans_status=
+                                                    reserve_status)]
+        reserve_gsm = [line.gsm for line in
+                       line_note_transport.filter(department=dep,
+                                                  trans_status=reserve_status)]
+        reserve_foam = [line.foam for line in
+                        line_note_transport.filter(department=dep,
+                                                   trans_status=reserve_status)]
 
         # 17 Пожарная техника (На ремонте(Тип основного пожарного автомобиля))
-        renovation_brand = [line.transport.brand.brand for line in line_note_transport.filter(department=dep,
-                                                                                              trans_status=
-                                                                                              renovation_status)]
+        renovation_brand = [line.transport.brand.brand for line in
+                            line_note_transport.filter(department=dep,
+                                                       trans_status=
+                                                       renovation_status)]
         # 18 Пожарная техника (На ремонте(Марка специального.пожарного автомобиля))
         renovation_model = [line.transport.trans_model.model for line in
-                            line_note_transport.filter(department=dep, trans_status=renovation_status)]
-
+                            line_note_transport.filter(department=dep,
+                                                       trans_status=renovation_status)]
 
         # print('MAXIMUM IS ', max([len(counting_brand), len(reserve_model), len(renovation_model)]))
         # print("RENOVATION is ", counting_brand, counting_model)
         # print("RENOVATION is ", reserve_brand, reserve_model)
         # print("RENOVATION is ", renovation_brand, renovation_model)
         # In order get right rowspan of table in department section we minus one from max
-        tab_row = max([len(counting_model), len(reserve_model), len(renovation_model)])  # Непонятный параметр который влияет на верстрку
+        tab_row = max([len(counting_model), len(reserve_model),
+                       len(renovation_model)])  # Непонятный параметр который влияет на верстрку
 
         report.append({
             # MAX NUMBER OR ROW OF DEPARTMENT TABLE
             'tab_row': tab_row,
             # ID DEP
-            'dep_unique_id': dep.name, #id
+            'dep_unique_id': dep.name,  # id
             # 0 Штат ПЧ (СПЧ,ПП)
             'num_fighter': dep.number_fighters,
             # 1 В карауле по списку л/с
-            'karaul_list': line_note_staff_base.filter(staff__department=dep).count(),
+            'karaul_list': line_note_staff_base.filter(
+                staff__department=dep).count(),
             # 2 Налицо личного состава (Всего)
-            'karaul_all': line_note_staff_base.filter(staff__department=dep, status=None).count(),
+            'karaul_all': line_note_staff_base.filter(staff__department=dep,
+                                                      status=None).count(),
             # 3 Налицо личного состава (Расчет)
-            'karaul_fighter': line_note_staff_base.filter(staff__department=dep, status=None,
-                                                          position__fire_fighter=True).count(),
+            'karaul_fighter': line_note_staff_base.filter(
+                staff__department=dep, status=None,
+                position__fire_fighter=True).count(),
             # 4 Налицо личного состава (Начальники караулов)
-            'head': line_note_staff_base.filter(staff__department=dep, status=None,
+            'head': line_note_staff_base.filter(staff__department=dep,
+                                                status=None,
                                                 position__in=head_list).count(),
             # 4 Налицо личного состава (Командиры отделений)
-            'commander': line_note_staff_base.filter(staff__department=dep, status=None,
+            'commander': line_note_staff_base.filter(staff__department=dep,
+                                                     status=None,
                                                      position__in=commander_list).count(),
             # 5 Налицо личного состава (Водители)
-            'drivers': line_note_staff_base.filter(staff__department=dep, status=None,
+            'drivers': line_note_staff_base.filter(staff__department=dep,
+                                                   status=None,
                                                    position=driver).count(),
             # 6 Налицо личного состава (Пожарные)
-            'fire_fighter': line_note_staff_base.filter(staff__department=dep, status=None,
+            'fire_fighter': line_note_staff_base.filter(staff__department=dep,
+                                                        status=None,
                                                         position=fire_fighter).count(),
             # 7 Налицо личного состава (Диспетчеров (радиотелефонистов))
-            'call_assistant': line_note_staff_base.filter(staff__department=dep, status=None,
-                                                          position=call_assistant).count(),
+            'call_assistant': line_note_staff_base.filter(
+                staff__department=dep, status=None,
+                position=call_assistant).count(),
             # 8 Газодымозащитники/ аппараты (те кто имеет допук для работы в противогазе, включая  начальников)
-            'gdzs': line_note_staff_base.filter(staff__department=dep, status=None, gdzs=True).count(),
+            'gdzs': line_note_staff_base.filter(staff__department=dep,
+                                                status=None,
+                                                gdzs=True).count(),
             # 9 Отсутствуют (Отпуск учебный/декрет.)
-            'vacation': line_note_staff_base.filter(staff__department=dep, status=vacation).count(),
+            'vacation': line_note_staff_base.filter(staff__department=dep,
+                                                    status=vacation).count(),
             # 10 Отсутствуют (Больные)
-            'sick': line_note_staff_base.filter(staff__department=dep, status=sick).count(),
+            'sick': line_note_staff_base.filter(staff__department=dep,
+                                                status=sick).count(),
             # 11 Отсутствуют (Командировка)
-            'business_trip': line_note_staff_base.filter(staff__department=dep, status=business_trip).count(),
+            'business_trip': line_note_staff_base.filter(staff__department=dep,
+                                                         status=business_trip).count(),
             # 12 Отсутствуют (Другие причины)
-            'others': line_note_staff_base.filter(staff__department=dep, status=others).count(),
+            'others': line_note_staff_base.filter(staff__department=dep,
+                                                  status=others).count(),
             # 13 Пожарная техника (В расчете(Тип основного пожарного автомобиля))
             'counting_brand': counting_brand,
             # 14 Пожарная техника (В расчете(Марка специального.пожарного автомобиля))
@@ -661,14 +744,12 @@ def line_note_report(request, date_insert):
             'motor_pumps_on_repair': motor_pumps_on_repair,
             'motor_pumps_in_combat': motor_pumps_in_combat,
 
-
             # 15 Пожарная техника (В резерве(Тип основного пожарного автомобиля))
             'reserve_brand': reserve_brand,
             # 16 Пожарная техника (В резерве(Марка специального.пожарного автомобиля))
             'reserve_model': reserve_model,
             'reserve_gsm': reserve_gsm,
             'reserve_foam': reserve_foam,
-
 
             # 17 Пожарная техника (На ремонте(Тип основного пожарного автомобиля))
             'renovation_brand': renovation_brand,
@@ -679,9 +760,10 @@ def line_note_report(request, date_insert):
 
     # print(report)
     if report:
-        [os.remove('application/static/report/' + foo) for foo in os.listdir('application/static/report/')]
+        [os.remove('application/static/report/' + foo) for foo in
+         os.listdir('application/static/report/')]
         create_report(date_insert, report)
-    print('report',report)
+    print('report', report)
     return render(request, 'application/2_line_note_report.html', {
         'userinfo': userinfo,
         'date_insert': date_insert,
@@ -695,11 +777,13 @@ def line_note_report(request, date_insert):
 def line_note_record(request, date_insert):
     userinfo = UserInfo.objects.get(user=request.user)
     # LINE NOTE OF STAFF
-    line_note_staff_base = LineNoteMan.objects.filter(date_line_note=date_insert,
-                                                      staff__department=userinfo.department)
+    line_note_staff_base = LineNoteMan.objects.filter(
+        date_line_note=date_insert,
+        staff__department=userinfo.department)
     # LINE NOTE OF TRANSPORT
-    line_note_transport = LineNoteTrans.objects.filter(date_line_note=date_insert,
-                                                       department=userinfo.department). \
+    line_note_transport = LineNoteTrans.objects.filter(
+        date_line_note=date_insert,
+        department=userinfo.department). \
         order_by('transport__id')
 
     return render(request, 'application/2_line_note_record.html', {
@@ -732,19 +816,23 @@ def line_note_main(request, date_insert):
         hydra_costume = request.POST.get('hydra_costume')
         motor_pumps_on_repair = request.POST.get('motor_pumps_on_repair')
         motor_pumps_in_combat = request.POST.get('motor_pumps_in_combat')
-        line = StaticValues(date_additional_information=date_additional_information,
-                            department=userinfo.department,
-                            foam_stock=foam_stock,
-                            hydra_costume=hydra_costume,
-                            motor_pumps_on_repair=motor_pumps_on_repair,
-                            motor_pumps_in_combat=motor_pumps_in_combat
-                             )
-        existing_len = len(StaticValues.objects.filter(date_additional_information=date_additional_information, department=userinfo.department))
+        line = StaticValues(
+            date_additional_information=date_additional_information,
+            department=userinfo.department,
+            foam_stock=foam_stock,
+            hydra_costume=hydra_costume,
+            motor_pumps_on_repair=motor_pumps_on_repair,
+            motor_pumps_in_combat=motor_pumps_in_combat
+        )
+        existing_len = len(StaticValues.objects.filter(
+            date_additional_information=date_additional_information,
+            department=userinfo.department))
         if existing_len == 0:
             line.save()
 
     if 'selected_trans_status' in request.POST:
-        selected_trans_status = (request.POST.get('selected_trans_status')).split(',')
+        selected_trans_status = (
+            request.POST.get('selected_trans_status')).split(',')
 
         gsm = (request.POST.get('gsm')).split(',')
         foam = (request.POST.get('foam')).split(',')
@@ -752,8 +840,10 @@ def line_note_main(request, date_insert):
         sleeves_66 = (request.POST.get('sleeves_66')).split(',')
         sleeves_51 = (request.POST.get('sleeves_51')).split(',')
 
-        fire_monitors_stationary = (request.POST.get('fire_monitors_stationary')).split(',')
-        fire_monitors_portable = (request.POST.get('fire_monitors_portable')).split(',')
+        fire_monitors_stationary = (
+            request.POST.get('fire_monitors_stationary')).split(',')
+        fire_monitors_portable = (
+            request.POST.get('fire_monitors_portable')).split(',')
         gps_600 = (request.POST.get('gps_600')).split(',')
         blizzard = (request.POST.get('blizzard')).split(',')
         portable_radios = (request.POST.get('portable_radios')).split(',')
@@ -769,7 +859,8 @@ def line_note_main(request, date_insert):
             value = check_text.split('|')[1].replace(' ', '')
             return_value = value if len(value) >= 1 else 0
             return int(return_value)
-        #print('selected_trans_status', selected_trans_status)
+
+        # print('selected_trans_status', selected_trans_status)
         print('gsm', request.POST)
         for trans_id in range(len(selected_trans_status)):
             st = selected_trans_status[trans_id].split('|')
@@ -780,8 +871,10 @@ def line_note_main(request, date_insert):
             sleeves_66_insert = get_value(sleeves_66[trans_id])
             sleeves_51_insert = get_value(sleeves_51[trans_id])
 
-            fire_monitors_stationary_insert = get_value(fire_monitors_stationary[trans_id])
-            fire_monitors_portable_insert = get_value(fire_monitors_portable[trans_id])
+            fire_monitors_stationary_insert = get_value(
+                fire_monitors_stationary[trans_id])
+            fire_monitors_portable_insert = get_value(
+                fire_monitors_portable[trans_id])
             gps_600_insert = get_value(gps_600[trans_id])
             blizzard_insert = get_value(blizzard[trans_id])
             portable_radios_insert = get_value(portable_radios[trans_id])
@@ -863,23 +956,29 @@ def line_note_main(request, date_insert):
                   department=userinfo.department,
                   sentry=sentry,
                   gdzs=staff_gdzs)
-        existing_user_len = len(Staff.objects.filter(unique_id=staff_unique_id))
+        existing_user_len = len(
+            Staff.objects.filter(unique_id=staff_unique_id))
         if existing_user_len == 0:
             s.save()
 
-#    if 'additional_information' in request.POST:
+    #    if 'additional_information' in request.POST:
 
     if (request.method == "POST") and ('selected_position' in request.POST):
         department = userinfo.department
-        selected_position_list = json.loads(request.POST.get('selected_position'))
+        selected_position_list = json.loads(
+            request.POST.get('selected_position'))
         for person in selected_position_list:
-            if person['selected_position'] == 'None' or person['selected_person'] == 'None':
+            if person['selected_position'] == 'None' or person[
+                'selected_person'] == 'None':
                 warning = 'Пожалуйста выберите из списка должность и ФИО'
             else:
-                selected_position = Position.objects.get(id=int(person['selected_position']))
-                selected_person = Staff.objects.get(id=int(person['selected_person']))
+                selected_position = Position.objects.get(
+                    id=int(person['selected_position']))
+                selected_person = Staff.objects.get(
+                    id=int(person['selected_person']))
                 if person['selected_status'] != 'None':
-                    selected_status = Status.objects.get(id=int(person['selected_status']))
+                    selected_status = Status.objects.get(
+                        id=int(person['selected_status']))
                 else:
                     selected_status = None
                 if person['selected_gdzs'] == True:
@@ -887,24 +986,31 @@ def line_note_main(request, date_insert):
                 else:
                     selected_gdzs = False
                 unique_for_today = True
-                to_day_person_duplicate = len(LineNoteMan.objects.filter(date_line_note=date_insert, staff=person['selected_person']))
+                to_day_person_duplicate = len(
+                    LineNoteMan.objects.filter(date_line_note=date_insert,
+                                               staff=person[
+                                                   'selected_person']))
                 if to_day_person_duplicate > 0:
                     unique_for_today = False
                 if not unique_for_today:
-                    duplicate_person = Staff.objects.get(pk=person['selected_person'])
+                    duplicate_person = Staff.objects.get(
+                        pk=person['selected_person'])
                     message = duplicate_person.full_name + ' - уже существует в строевой записке на текущую дату'
                     return JsonResponse({"message": message}, status=400)
                 if unique_for_today:
-                    b = LineNoteMan(date_line_note=date_insert, position=selected_position,
-                                    staff=selected_person, status=selected_status,
+                    b = LineNoteMan(date_line_note=date_insert,
+                                    position=selected_position,
+                                    staff=selected_person,
+                                    status=selected_status,
                                     gdzs=selected_gdzs, department=department,
                                     )
                     b.save()
         return JsonResponse({"result": 'success'}, status=200)
 
     # LINE NOTE OF TRANSPORT STATUS
-    line_note_transport = LineNoteTrans.objects.filter(date_line_note=date_insert,
-                                                       department=userinfo.department). \
+    line_note_transport = LineNoteTrans.objects.filter(
+        date_line_note=date_insert,
+        department=userinfo.department). \
         order_by('transport__id')
     # If extra transport was added
     transports = Transport.objects.filter(department=userinfo.department)
@@ -918,31 +1024,41 @@ def line_note_main(request, date_insert):
                                          trans_status=None)
                     line.save()
     # REFRESH LINE NOTE OF TRANSPORT STATUS
-    line_note_transport = LineNoteTrans.objects.filter(date_line_note=date_insert,
-                                                       department=userinfo.department). \
+    line_note_transport = LineNoteTrans.objects.filter(
+        date_line_note=date_insert,
+        department=userinfo.department). \
         order_by('transport__id')
     # LINE NOTE OF STAFF
-    line_note_staff_base = LineNoteMan.objects.filter(date_line_note=date_insert,
-                                                      staff__department=userinfo.department)
+    line_note_staff_base = LineNoteMan.objects.filter(
+        date_line_note=date_insert,
+        staff__department=userinfo.department)
     # Exclude list of person from list of persons
     line_note_list = [st.staff.unique_id for st in line_note_staff_base]
-    staff_members_base = Staff.objects.filter(department=userinfo.department, position__main_position=False)#.exclude(unique_id__in=line_note_list)
+    staff_members_base = Staff.objects.filter(department=userinfo.department,
+                                              position__main_position=False)  # .exclude(unique_id__in=line_note_list)
 
-
-    staff_members_main = Staff.objects.filter(department=userinfo.department, unique_id__in=line_note_list)
+    staff_members_main = Staff.objects.filter(department=userinfo.department,
+                                              unique_id__in=line_note_list)
     commanders_position_id = [5, 6, 7, 8]
-    commanders = Staff.objects.filter(department=userinfo.department, position__in=commanders_position_id).exclude(unique_id__in=line_note_list)
+    commanders = Staff.objects.filter(department=userinfo.department,
+                                      position__in=commanders_position_id).exclude(
+        unique_id__in=line_note_list)
     commanders_list = [st.unique_id for st in commanders]
     positions = Position.objects.all()
-    commanders_positions = Position.objects.filter(id__in=commanders_position_id)
+    commanders_positions = Position.objects.filter(
+        id__in=commanders_position_id)
     status = Status.objects.all()
     trans_status = TransStatus.objects.all()
     karaul = Sentry.objects.all()
     transform = TransportForm()
     all_def_staff = Staff.objects.filter(department=userinfo.department)
-    all_def_staff_without_today = Staff.objects.filter(department=userinfo.department).exclude(unique_id__in=line_note_list)
+    all_def_staff_without_today = Staff.objects.filter(
+        department=userinfo.department).exclude(unique_id__in=line_note_list)
     try:
-        out_of_trans = StaticValues.objects.filter(department=userinfo.department, date_additional_information=date_insert)[0]
+        out_of_trans = \
+            StaticValues.objects.filter(department=userinfo.department,
+                                        date_additional_information=date_insert)[
+                0]
     except:
         out_of_trans = {}
     return render(request, 'application/2_line_note_main.html', {
@@ -970,7 +1086,6 @@ def line_note_main(request, date_insert):
 
 @login_required(login_url='/accounts/login/')
 def statistics(request):
-
     emergency_types = EmergencyType.objects.all()
     objects = ObjectCategory.objects.all()
 
@@ -990,32 +1105,35 @@ def statistics(request):
     return render(request, 'application/3_statistics.html', context)
 
 
-
 @login_required(login_url='/accounts/login/')
 def knowledge_storage(request):
     all_know = KnowledgeBase.objects.all().values()
-    #print(type(all_know))
-    know = KnowledgeBase.objects.all().values_list('section').distinct().order_by('section')
+    # print(type(all_know))
+    know = KnowledgeBase.objects.all().values_list(
+        'section').distinct().order_by('section')
     know = [i[0] for i in know]
-    return render(request, 'application/6_knowledge_storage.html', {'know': know, 'all_know': all_know, })
+    return render(request, 'application/6_knowledge_storage.html',
+                  {'know': know, 'all_know': all_know, })
+
 
 @login_required(login_url='/accounts/login/')
 def knowledge_section(request, section):
     all_know = KnowledgeBase.objects.filter(section=section).values()
 
-    return render(request, 'application/6_knowledge_section.html', {'section': section, 'all_know': all_know, })
-
+    return render(request, 'application/6_knowledge_section.html',
+                  {'section': section, 'all_know': all_know, })
 
 
 @login_required(login_url='/accounts/login/')
 def income_voice_record(request):
-    #print(request.POST.get('api_data_unique_id'))
+    # print(request.POST.get('api_data_unique_id'))
     if 'api_data_unique_id' in request.POST:
         unique_id = request.POST.get('api_data_unique_id')
         data = ApiData.objects.get(unique_id=unique_id)
         date_of_call = str(data.start_time.date()).replace('-', '/')
         ssh = SSHClient()
-        ssh.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
+        ssh.load_host_keys(
+            os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
         ssh.connect(SERVER, username=USERNAME, password=PASSWORD)
         ftp = ssh.open_sftp()
         path_folder = '/var/spool/asterisk/monitor/' + date_of_call + '/'
@@ -1042,28 +1160,31 @@ def new_income_call_end_time(request):
     if 'end_time' in request.GET:
         end_time = datetime.now()
         unique_id = request.GET.get('unique_id')
-        #print(end_time, unique_id)
+        # print(end_time, unique_id)
 
         try:
             api_data = ApiData.objects.get(unique_id=unique_id)
-            scheduler.add_job(save_income_voice, trigger='date', run_date=datetime.now() + timedelta(seconds=3),
+            scheduler.add_job(save_income_voice, trigger='date',
+                              run_date=datetime.now() + timedelta(seconds=3),
                               args=(unique_id,))
             api_data.end_time = end_time
             api_data.second_api = True
-            data_for_number_in = None # fix error in async socker event['data_for_number_in']
-            count_call_new_appeal = None # fix error in async socker event['count_call_new_appeal']
+            data_for_number_in = None  # fix error in async socker event['data_for_number_in']
+            count_call_new_appeal = None  # fix error in async socker event['count_call_new_appeal']
             api_data.save()
             sip_number = api_data.user.sip_number
             user_id = UserInfo.objects.get(sip_number=sip_number).user.id
             async_to_sync(channel_layer.group_send)(str(user_id),
-                                                    {'type': 'send_income_call',
-                                                     'unique_id': unique_id,
-                                                     'data_for_number_in': data_for_number_in,
-                                                     'count_call_new_appeal': count_call_new_appeal,
-                                                     'end_time': str(end_time),
-                                                     'api': 2})
+                                                    {
+                                                        'type': 'send_income_call',
+                                                        'unique_id': unique_id,
+                                                        'data_for_number_in': data_for_number_in,
+                                                        'count_call_new_appeal': count_call_new_appeal,
+                                                        'end_time': str(
+                                                            end_time),
+                                                        'api': 2})
         except ApiData.DoesNotExist:
-            #print('Unique_id does not exist!')
+            # print('Unique_id does not exist!')
             pass
 
     data = {'success': 'yes'}
@@ -1078,13 +1199,15 @@ def new_income_call(request):
         number_in = request.GET.get('income_number')
         sip_number = request.GET.get('sip_number')
         start_time = datetime.now()
-        #print(unique_id,
+        # print(unique_id,
         #      number_in,
         #      sip_number)
         try:
             user = UserInfo.objects.get(sip_number=sip_number)
-            data_for_number = CurrentAppeal.objects.filter(income_call_number=number_in).order_by('-id').values("income_call_name",
-                                                                                                                "iin", "short_question")
+            data_for_number = CurrentAppeal.objects.filter(
+                income_call_number=number_in).order_by('-id').values(
+                "income_call_name",
+                "iin", "short_question")
             if number_in[0] == '8':
                 number_in = '7' + number_in[1:]
             # если данные по номеру есть, то
@@ -1102,14 +1225,15 @@ def new_income_call(request):
             # print(user.user.id)
 
             async_to_sync(channel_layer.group_send)(str(user.user.id),
-                                                    {'type': 'send_income_call',
-                                                     'unique_id': unique_id,
-                                                     'number_in': number_in,
-                                                     'count_call_new_appeal': count_call_new_appeal,
-                                                     'data_for_number_in': data_for_number_in,
-                                                     'api': 1})
+                                                    {
+                                                        'type': 'send_income_call',
+                                                        'unique_id': unique_id,
+                                                        'number_in': number_in,
+                                                        'count_call_new_appeal': count_call_new_appeal,
+                                                        'data_for_number_in': data_for_number_in,
+                                                        'api': 1})
         except UserInfo.DoesNotExist:
-            #print('User with this sip number does not exist')
+            # print('User with this sip number does not exist')
             pass
     data = {'success': 'yes'}
     return Response(data)
@@ -1120,14 +1244,14 @@ def mark_quality(request):
     if 'mark_quality' in request.GET:
         unique_id = request.GET.get('unique_id')
         mark_quality = request.GET.get('mark_quality')
-        #print(unique_id, mark_quality)
+        # print(unique_id, mark_quality)
         try:
             if mark_quality != '':
                 api_data = ApiData.objects.get(unique_id=unique_id)
                 api_data.mark_quality = int(mark_quality)
                 api_data.save()
         except:
-            #print('Doesnt exist api data')
+            # print('Doesnt exist api data')
             pass
     data = {'success': 'yes'}
     return Response(data)
@@ -1137,97 +1261,117 @@ def logout(request):
     logout(request)
     redirect('/')
 
+
 @login_required(login_url='/accounts/login/')
 def reportExcel(request):
-
     cur_appeals = CurrentAppeal.objects.all().order_by('id')[0:34]
     cur_appeals_filter = CurrentAppealFilter(request.GET, queryset=cur_appeals)
 
     time_talking = []
     operator_full_name = []
-    operator_first_name = [u[0] for u in cur_appeals_filter.qs.values_list('user_created_event__user__first_name')]
-    time_start_call = [u[0] for u in cur_appeals_filter.qs.values_list('date_of_call_start')]
+    operator_first_name = [u[0] for u in cur_appeals_filter.qs.values_list(
+        'user_created_event__user__first_name')]
+    time_start_call = [u[0] for u in
+                       cur_appeals_filter.qs.values_list('date_of_call_start')]
 
-    for i, j in enumerate(cur_appeals_filter.qs.values_list('date_of_call_end')):
+    for i, j in enumerate(
+            cur_appeals_filter.qs.values_list('date_of_call_end')):
         time_talking.append(j[0] - time_start_call[i])
 
-    for i, j in enumerate(cur_appeals_filter.qs.values_list('user_created_event__user__last_name')):
+    for i, j in enumerate(cur_appeals_filter.qs.values_list(
+            'user_created_event__user__last_name')):
         operator_full_name.append(j[0] + ' ' + operator_first_name[i])
 
-    output = BytesIO()
-    writer = pd.ExcelWriter(output, engine='xlsxwriter')
+    data = {'Номер учетной карточки': [u[0] for u in
+                                       cur_appeals_filter.qs.values_list(
+                                           'id')],
+            'Статус звонка': ['Отвеченный'] * len(operator_full_name),
+            'Дата звонка': [i.strftime("%d.%m.%Y") for i in time_start_call],
+            'Время звонка': [i.strftime("%H:%M:%S") for i in time_start_call],
+            'Время разговора': [str(i) for i in time_talking],
+            'Номер телефона': [u[0] for u in cur_appeals_filter.qs.values_list(
+                'income_call_number')],
+            'Адрес': [u[0] for u in
+                      cur_appeals_filter.qs.values_list('address')],
+            'Тип вызова': [u[0] for u in cur_appeals_filter.qs.values_list(
+                'emergency_type__name')],
 
-    data = {'Номер учетной карточки': [u[0] for u in cur_appeals_filter.qs.values_list('id')],
-    'Статус звонка': ['Отвеченный']*len(operator_full_name),
-    'Дата звонка': [i.strftime("%d.%m.%Y") for i in time_start_call],
-    'Время звонка': [i.strftime("%H:%M:%S") for i in time_start_call],
-    'Время разговора': [str(i) for i in time_talking],
-    'Номер телефона': [u[0] for u in cur_appeals_filter.qs.values_list('income_call_number')],
-    'Адрес': [u[0] for u in cur_appeals_filter.qs.values_list('address')],
-    'Тип вызова': [u[0] for u in cur_appeals_filter.qs.values_list('emergency_type__name')],
+            'Ранг': [u[0] for u in
+                     cur_appeals_filter.qs.values_list('emergency_rank')],
+            'Категория объекта': [u[0] for u in
+                                  cur_appeals_filter.qs.values_list(
+                                      'object_category__name')],
 
-    'Ранг': [u[0] for u in cur_appeals_filter.qs.values_list('emergency_rank')],
-    'Категория объекта': [u[0] for u in cur_appeals_filter.qs.values_list('object_category__name')],
+            'Пожарная часть': [u[0] for u in cur_appeals_filter.qs.values_list(
+                'department__name')],
 
-    'Пожарная часть':[u[0] for u in cur_appeals_filter.qs.values_list('department__name')],
+            'Руководитель туш-я пожара': [u[0] for u in
+                                          cur_appeals_filter.qs.values_list(
+                                              'responsible_department_person')],
 
-    'Руководитель туш-я пожара': [u[0] for u in cur_appeals_filter.qs.values_list('responsible_department_person')],
+            }
 
-    }
+    wb = Workbook()
+    ws = wb.active
+    column_widths = []
+    header_style = Font(bold=True)
+    border_style = Border(left=Side(style='thin'),
+                          right=Side(style='thin'),
+                          top=Side(style='thin'),
+                          bottom=Side(style='thin'))
 
-    df = pd.DataFrame(data)
+    for number, (header, values) in enumerate(data.items()):
+        col = number + 1
+        cell = ws.cell(row=1, column=col)
+        cell.value = header
+        cell.font = header_style
+        cell.border = border_style
+        cell.alignment = Alignment(wrap_text=True)
 
-    df.index += 1
+        column_widths.append(len(header))
+        for j, val in enumerate(values):
+            row = j + 2
+            cell = ws.cell(row=row, column=col)
+            cell.value = val
+            cell.border = border_style
 
-    df.to_excel(writer, sheet_name='отчет', startrow=1, index_label='№', header=False)
+            value_len = len(str(val))
+            if value_len > column_widths[number]:
+                column_widths[number] = value_len
 
-    workbook = writer.book
-    worksheet = writer.sheets['отчет']
+    for i, column_width in enumerate(column_widths):
+        column_letter = get_column_letter(i + 1)
+        ws.column_dimensions[column_letter].width = column_width + 3
 
-    header_format = workbook.add_format({'bold': True, 'text_wrap': True, 'valign': 'top', 'border': 1})
-
-    # Overwrite both the value and the format of each header cell
-    for col_num, value in enumerate(df.columns.values):
-        worksheet.write(0, col_num + 1, value, header_format)
-
-    worksheet.write(0, 0, '№', header_format)
-
-    for column in df:
-        column_width = max(df[column].astype(str).map(len).max(), len(column))
-        col_idx = df.columns.get_loc(column)
-        writer.sheets['отчет'].set_column(col_idx, col_idx, column_width)
-
-    col_idx = df.columns.get_loc('Номер телефона')
-    worksheet.set_column(col_idx+1, col_idx+1, 17)
-    # col_idx = df.columns.get_loc('Категория вопроса')
-    worksheet.set_column(col_idx+1, col_idx+1, 23)
-    worksheet.set_column(0, 0, 5)
-
-    writer.save()
-    output.seek(0)
-    response = HttpResponse(
-        output.getvalue(),
-        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
-    response['Content-Disposition'] = 'attachment; filename=report.xlsx'
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="report.xlsx"'
+    wb.save(response)
 
     return response
+
 
 @login_required(login_url='/accounts/login/')
 def knowledge_base(request):
     all_know = KnowledgeBase.objects.all().values()
-    #print(type(all_know))
-    know = KnowledgeBase.objects.all().values_list('section').distinct().order_by('section')
+    # print(type(all_know))
+    know = KnowledgeBase.objects.all().values_list(
+        'section').distinct().order_by('section')
     know = [i[0] for i in know]
-    return render(request, 'application/knowledge_base.html', {'know': know, 'all_know': all_know, })
+    return render(request, 'application/knowledge_base.html',
+                  {'know': know, 'all_know': all_know, })
+
 
 @login_required(login_url='/accounts/login/')
 def profileInfo(request):
-    take_call = CurrentAppeal.objects.filter(user_created_event__user=request.user)
-    return render(request, 'application/7_profile.html', context={'number_call': len(take_call), })
+    take_call = CurrentAppeal.objects.filter(
+        user_created_event__user=request.user)
+    return render(request, 'application/7_profile.html',
+                  context={'number_call': len(take_call), })
+
 
 def map(request):
     return render(request, 'application/map.html')
+
 
 def close_emergency(request, emergency_id):
     emergency = CurrentAppeal.objects.get(id=emergency_id)
@@ -1243,8 +1387,11 @@ def get_emergency_boss(request):
     date_insert = date.today()
     dep_list = request.POST.getlist('department[]')
 
-    bosses_qs = Staff.objects.filter(department__id__in=dep_list, position__name='НАЧАЛЬНИК КАРАУЛА')
-    today_bosses_qs = LineNoteMan.objects.filter(date_line_note=date_insert, position_id=1, department_id__in=dep_list)
+    bosses_qs = Staff.objects.filter(department__id__in=dep_list,
+                                     position__name='НАЧАЛЬНИК КАРАУЛА')
+    today_bosses_qs = LineNoteMan.objects.filter(date_line_note=date_insert,
+                                                 position_id=1,
+                                                 department_id__in=dep_list)
     today_bosses_id = []
     for t_boss in today_bosses_qs:
         today_bosses_id.append(t_boss.staff_id)
@@ -1256,17 +1403,17 @@ def get_emergency_boss(request):
     transport_qs = Transport.objects.filter(department__id__in=dep_list)
     t = []
     for trans in transport_qs:
-        t.append({'id': trans.id, 'name': trans.brand.brand + ' [' + trans.department.name + ']'})
+        t.append({'id': trans.id,
+                  'name': trans.brand.brand + ' [' + trans.department.name + ']'})
     return JsonResponse({'bosses': r, 'transport': t})
 
 
 def get_emergency_transport(request):
     return render(request, 'application/emergency_transport.html')
 
+
 def stat_pdf(request):
-
     emergency_types = EmergencyType.objects.all()
-
 
     types = []
     for t in emergency_types:
@@ -1279,13 +1426,10 @@ def stat_pdf(request):
     return render(request, 'application/stat_pdf.html', context=context)
 
 
-
-
-#Creating a class based view
+# Creating a class based view
 class GeneratePdf(View):
-     def get(self, request, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         emergency_types = EmergencyType.objects.all()
-
 
         types = []
         for t in emergency_types:
@@ -1298,8 +1442,9 @@ class GeneratePdf(View):
         # getting the template
         pdf = html_to_pdf('application/stat_pdf.html', context_dict=context)
 
-         # rendering the template
+        # rendering the template
         return HttpResponse(pdf, content_type='application/pdf')
+
 
 @permission_required('application.user_fire_department_call_center')
 @login_required(login_url='/accounts/login/')
@@ -1307,8 +1452,9 @@ def line_note_history(request):
     date_insert = date.today()
     userinfo = UserInfo.objects.get(user=request.user)
 
-    line_note_staff_base = LineNoteMan.objects.filter(date_line_note=date_insert,
-                                                      staff__department=userinfo.department)
+    line_note_staff_base = LineNoteMan.objects.filter(
+        date_line_note=date_insert,
+        staff__department=userinfo.department)
     print(line_note_staff_base)
     # Exclude list of person from list of persons
     line_note_list = [st.staff.unique_id for st in line_note_staff_base]
@@ -1328,7 +1474,7 @@ def line_note_history(request):
         'date_insert': date_insert,
         'staff_members_main': staff_members_main_1,
         'line_note_staff_base': line_note_staff_base,
-        'line_note_list':line_note_list,
+        'line_note_list': line_note_list,
         'positions': positions,
         'karaul': karaul,
         'status': status})
