@@ -1,3 +1,6 @@
+{% load static %}
+<script type="text/javascript" src="{% static 'jquery/sayt.min.jquery.js' %}"></script>
+
 <style>
   /*Select2 ReadOnly Start*/
   select[readonly].select2-hidden-accessible + .select2-container {
@@ -341,6 +344,18 @@ data-bs-backdrop="static" data-bs-keyboard="false">
 
 
 <script>
+$(function() {
+    // Инициализация скрипта
+    $('#current_emergency_form').sayt({
+        'autosave': true,
+        'autorecover': true,
+        'days': 7
+    });
+})
+</script>
+
+
+<script>
   $("#tranport").select2("readonly", true);
   $("#transport_search").keyup(function(){
 
@@ -380,23 +395,23 @@ data-bs-backdrop="static" data-bs-keyboard="false">
   $(".save_transport_for_emergency").click(function(){
     $('#transport').empty().trigger("change");
      $(".pzh_transport_checkbox:checked").each(function(){
-           
+
           var newOption = new Option($(this).attr("data-name"), $(this).val(), false, true);
           $('#transport').append(newOption).trigger('change');
-      
+
     });
     $('#exampleModal').modal('toggle');
   });
-  
+
   $("#pzh_chooser").change(function(){
     $(".pzh_transport").hide();
     $(".pzh_transport[data-pzh-id="+$(this).val()+"]").show();
   });
   $("#department").change(function(){
-    //ajax 
+    //ajax
     var department = $("#department").val();
     $("#pzh_chooser").select2("val", department);
-    
+
     $.ajax({
       url: "/main_page/get_emergency_boss/",
       method: "POST",
@@ -407,13 +422,13 @@ data-bs-backdrop="static" data-bs-keyboard="false">
         $('#transport').empty().trigger("change");
 
         console.log(data);
-    
-        for(var i = 0; i < data.bosses.length; i++){          
+
+        for(var i = 0; i < data.bosses.length; i++){
           var newOption = new Option(data.bosses[i].name, data.bosses[i].id, false, false);
           $('#responsible_department_person').append(newOption).trigger('change');
         }
 
-        // for(var i = 0; i < data.transport.length; i++){          
+        // for(var i = 0; i < data.transport.length; i++){
         //   var newOption = new Option(data.transport[i].name, data.transport[i].id, false, true);
         //   $('#transport').append(newOption).trigger('change');
         // }
@@ -458,7 +473,7 @@ function departmentFunction()
   {
     let message1 = form.value;
     let message2 = form2.value;
-    
+
     let csrftoken = "{{ csrf_token }}"
     let xhttp_get_department = new XMLHttpRequest();
     let message = "Казахстан Тараз " + message1 + " " + message2
@@ -491,30 +506,30 @@ function departmentFunction()
           if (department_text == "Область СПЧ-1")
             {
               $('#department').val('5');
-              $('#department').trigger('change'); 
-              
+              $('#department').trigger('change');
+
               console.log(1)
             }
             if (department_text == "Область СПЧ-2")
             {
               $('#department').val('6');
-              $('#department').trigger('change'); 
-              
+              $('#department').trigger('change');
+
               console.log(2)
             }
             if (department_text == "Область СПЧ-3")
             {
               $('#department').val('7');
-              $('#department').trigger('change'); 
+              $('#department').trigger('change');
               console.log(3)
             }
             if (department_text == "Область СПЧ-4")
             {
               $('#department').val('8');
-              $('#department').trigger('change'); 
+              $('#department').trigger('change');
               console.log(4)
             }
-           
+
         }
     }
   }
