@@ -1,5 +1,5 @@
 {% load static %}
-<script type="text/javascript" src="{% static 'jquery/sayt.min.jquery.js' %}"></script>
+<script type="text/javascript" src="{% static 'jquery/sayt.jquery.js' %}"></script>
 
 <style>
   /*Select2 ReadOnly Start*/
@@ -30,12 +30,12 @@ data-bs-backdrop="static" data-bs-keyboard="false">
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-      <form class="row g-3" method="post" id="current_emergency_form" action="/main_page/"">
-        {% csrf_token %}
-        <div class="col-md-4">
-          <label for="date_of_call" class="form-label">Дата вызова</label>
-          <input type="text" class="form-control" id="date_of_call" name="date_of_call" >
-        </div>
+        <form class="row g-3" method="post" id="current_emergency_form" action="/main_page/">
+          {% csrf_token %}
+          <div class="col-md-4">
+            <label for="date_of_call" class="form-label">Дата вызова</label>
+            <input type="text" class="form-control" id="date_of_call" name="date_of_call">
+      </div>
        <div class="col-md-2">
           <label for="time_of_call" class="form-label">Начало звонка</label>
           <input type="time" class="form-control" id="time_of_call" step="1" name="time_of_call">
@@ -259,7 +259,7 @@ data-bs-backdrop="static" data-bs-keyboard="false">
       
       </div>
       <div class="modal-footer">
-        <button class="btn btn-primary smm" type="submit">Добавить новый вызов</button>
+        <button id="resetCookies" class="btn btn-primary smm" type="submit">Добавить новый вызов</button>
         <button type="button" class="btn btn-warning" data-bs-dismiss="modal">Закрыть</button>
       </div>
     </form>
@@ -344,18 +344,19 @@ data-bs-backdrop="static" data-bs-keyboard="false">
 
 
 <script>
-$(function() {
-    // Инициализация скрипта
-    $('#current_emergency_form').sayt({
-        'autosave': true,
-        'autorecover': true,
-        'days': 7
+  $(function() {
+    $('#current_emergency_form').sayt({'autosave': true, 'autorecover': true, 'days': 7});
     });
-})
-</script>
+
+$('#resetCookies').click(function()
+    {
+    $('#current_emergency_form').sayt({'erase': true});
+
+    console.log('Form cookie was deleted.');
+    return false;
+    });
 
 
-<script>
   $("#tranport").select2("readonly", true);
   $("#transport_search").keyup(function(){
 
