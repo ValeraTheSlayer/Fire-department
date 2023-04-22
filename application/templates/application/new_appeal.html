@@ -1,6 +1,7 @@
 {% load static %}
 <script type="text/javascript" src="{% static 'jquery/sayt.jquery.js' %}"></script>
-
+<script type="text/javascript" src="{% static 'jquery/jquery.cookie.js' %}"></script>
+<!-- jquery/sayt.min.jquery.js -->
 <style>
   /*Select2 ReadOnly Start*/
   select[readonly].select2-hidden-accessible + .select2-container {
@@ -181,7 +182,7 @@ data-bs-backdrop="static" data-bs-keyboard="false">
         <label for="department" class="form-label">Пожарная часть</label>
         <select class="form-select select2_selection" id="department" name="department" required multiple="multiple">
             {% for d in departaments %}
-               <option value="{{d.id}}">{{d}}</option>                   
+               <option value="{{d.id}}">{{d}}</option> 
             {% endfor %}
         </select>
     </div>    
@@ -350,10 +351,11 @@ data-bs-backdrop="static" data-bs-keyboard="false">
 
 $('#resetCookies').click(function()
     {
+      
     $('#current_emergency_form').sayt({'erase': true});
-
+    set_empty_cookies_val()
     console.log('Form cookie was deleted.');
-    return false;
+    $(this).submit();
     });
 
 
@@ -445,6 +447,7 @@ chatSocket = new WebSocket(url)
 
 let form = document.getElementById("address_modal");
 let form2 = document.getElementById("house");
+let depart_form = document.getElementById("department");
 let lat_hidden = document.getElementById("lat_hidden");
 let long_hidden = document.getElementById("long_hidden");
 
@@ -459,22 +462,66 @@ let long_hidden = document.getElementById("long_hidden");
 //   })
 
 
+function getCookie(cookieName) {
+  let cookie = {};
+  document.cookie.split('; ').forEach(function(el) {
+    let [key,value] = el.split('=');
+    cookie[key.trim()] = value;
+  })
+  console.log(cookie[cookieName])
+  return cookie[cookieName];
+}
+function set_cookies_val(){
+  
+  let message1 = form.value;
+  let message2 = form2.value;
+  document.cookie = 'address_modal='+ message1
+  document.cookie = 'house='+ message2
+}
 
-// form2.addEventListener('input', (e)=>{
-//   let message = form.value;
-//   let message2 = form2.value;
+function set_to_forms_cookies_val(){
+  // console.log(document.cookie)
+  console.log(document.cookie)
+  const value = `;${document.cookie}`;
+  var house_cookie = getCookie('house')
+  var address_modal_cookie = getCookie('address_modal')
+  console.log('house_cookie', typeof  house_cookie)
+  console.log('address_modal_cookie',typeof  address_modal_cookie)
+  if (house_cookie == "50000"){
+    $('#house').val("");
+    $('#address_modal').val("");
+  }
+  else{
+    $('#house').val(house_cookie);
+    $('#address_modal').val(address_modal_cookie);
+  }
+  substring = "MULTI"
+  house_form = form2.value
+  console.log('house_form',house_form)
+  console.log('substring', substring)
+  console.log(substring.includes(house_form))
 
-//   chatSocket.send(JSON.stringify(
-//     {'message': message,
-//      'message2': message2,}
-//     ))
-//   })
+  if (substring.includes(house_form))
+  {
+    document.getElementById("house").value = " ";
 
+  }
+}
+
+function set_empty_cookies_val(){
+  console.log(document.cookie)
+  document.cookie = 'address_modal=50000;'
+  document.cookie = 'house=50000;'
+  console.log(document.cookie)
+}
+
+set_to_forms_cookies_val()
 function departmentFunction()
   {
+
     let message1 = form.value;
     let message2 = form2.value;
-
+    set_cookies_val()
     let csrftoken = "{{ csrf_token }}"
     let xhttp_get_department = new XMLHttpRequest();
     let message = "Казахстан Тараз " + message1 + " " + message2
@@ -508,27 +555,27 @@ function departmentFunction()
             {
               $('#department').val('5');
               $('#department').trigger('change');
-
-              console.log(1)
             }
             if (department_text == "Область СПЧ-2")
             {
               $('#department').val('6');
               $('#department').trigger('change');
 
-              console.log(2)
             }
             if (department_text == "Область СПЧ-3")
             {
               $('#department').val('7');
               $('#department').trigger('change');
-              console.log(3)
+
             }
             if (department_text == "Область СПЧ-4")
             {
               $('#department').val('8');
               $('#department').trigger('change');
-              console.log(4)
+
+            }
+            else{
+
             }
 
         }

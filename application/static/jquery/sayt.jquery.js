@@ -90,14 +90,17 @@
          */
         if(settings['erase'] == true)
         {
-            $.cookie( cookie_id, null);
+            if ($.removeCookie) {
+                $.removeCookie(cookie_id);
+            } else {
+                $.cookie(cookie_id, null);
+            }
+            
             if (typeof(Storage) !== "undefined") {
                 localStorage.removeItem(cookie_id);
             }
-//            else {
-//                $.cookie(cookie_id, null);
-//            }
-
+            
+            console.log('Form cookie was deleted.');
             return true;
         }
 
