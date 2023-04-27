@@ -72,3 +72,12 @@ class Polygon_4_Coordinates(models.Model):
     class Meta:
         verbose_name_plural = "Область вызова СПЧ-4"
         verbose_name = "крайняя кордината желтой области СПЧ-4"
+
+
+class Polygon_5_Coordinates(models.Model):
+    latitude = models.FloatField(verbose_name='Широта', default=None)
+    longitude = models.FloatField(verbose_name='Долгота', default=None)
+
+    class Meta:
+        verbose_name_plural = "Область вызова СПЧ-5"
+        verbose_name = "крайняя кордината желтой области СПЧ-5"

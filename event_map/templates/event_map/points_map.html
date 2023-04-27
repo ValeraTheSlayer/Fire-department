@@ -637,17 +637,125 @@ a:hover {
 
       }
       draw_poligon_4()
+
+
+      //Полигон СПЧ-5
+      function draw_poligon_5(){
+        let polygon_5_xhttp = new XMLHttpRequest();
+        let csrftoken = "{{ csrf_token }}"
+        polygon_5_xhttp.open("GET", "{% url 'get_polygon_5_points' %}")
+        polygon_5_xhttp.setRequestHeader("X-CSRFToken", csrftoken);
+        var polygon_5_data = new FormData();
+        polygon_5_data.append('get_polygon_5_points', 'True')
+        polygon_5_xhttp.send(polygon_5_data)
+        polygon_5_xhttp.onreadystatechange = function()
+          {
+            if (this.readyState == 4 && this.status == 200)
+              {
+                response_text = this.responseText
+                var response_obj = JSON.parse(response_text);
+                var response_obj_keys = Object.keys(response_obj)
+                var coordinates_to_polygon = []
+                for (let key of response_obj_keys)
+                  {
+                    let one_point = [response_obj[key]['latitude'], response_obj[key]['longitude']]
+                    coordinates_to_polygon.unshift(one_point)
+                  }
+
+
+                  const polygon_5 = new ymaps.Polygon([coordinates_to_polygon], {}, {
+                    // Курсор в режиме добавления новых вершин.
+                    editorDrawingCursor: "crosshair",
+                    // Максимально допустимое количество вершин.
+                    editorMaxPoints: 10000,
+                    // Цвет заливки.
+                    fillColor: '#838996',
+                    opacity: 0.5,
+                    // Цвет обводки.
+                    strokeColor: '#0000FF',
+                    // Ширина обводки.
+                    strokeWidth: 1
+                  });
+                  map.geoObjects.add(polygon_5);
+                  $('#edit_poligon_5').click(function () {
+                    polygon_5.editor.startEditing();
+                  });
+
+                  $('#draw_poligon_5').click(function () {
+                    const polygon_5 = new ymaps.Polygon([], {}, {
+                      // Курсор в режиме добавления новых вершин.
+                      editorDrawingCursor: "crosshair",
+                      // Максимально допустимое количество вершин.
+                      editorMaxPoints: 10000,
+                      // Цвет заливки.
+                      fillColor: '#FFE019',
+                      opacity: 0.5,
+                      // Цвет обводки.
+                      strokeColor: '#0000FF',
+                      // Ширина обводки.
+                      strokeWidth: 1
+                      });
+                    var stateMonitor = new ymaps.Monitor(polygon_5.editor.state);
+                    stateMonitor.add("drawing", function (newValue) {
+                      polygon_5.options.set("strokeColor", newValue ? '#838996' : '#0000FF');
+                    });
+                    map.geoObjects.add(polygon_5);
+                    polygon_5.editor.startDrawing();
+                    $('#save_poligon_5').click(function () {
+                      polygon_5.editor.stopDrawing();
+                      polygon_5.editor.stopEditing();
+                      polygon_5_coordinates = polygon_5.geometry.getCoordinates()[0]
+                      var polygon_5_data = new FormData();
+                      polygon_5_data.append('update_polygon_5_points', 'True')
+                      let id_ = 1
+                      for (let element of polygon_5_coordinates)
+                        {
+                          polygon_5_data.append(id_, element)
+                          id_ += 1;
+                        }
+                      let polygon_5_xhttp = new XMLHttpRequest();
+                      let csrftoken = "{{ csrf_token }}"
+                      polygon_5_xhttp.open("POST", "{% url 'get_polygon_5_points' %}")
+                      polygon_5_xhttp.setRequestHeader("X-CSRFToken", csrftoken);
+                      polygon_5_xhttp.send(polygon_5_data)
+                    });
+                  });
+
+                  $('#save_poligon_5').click(function () {
+                    polygon_5.editor.stopDrawing();
+                    polygon_5.editor.stopEditing();
+                    polygon_5_coordinates = polygon_5.geometry.getCoordinates()[0]
+                    var polygon_5_data = new FormData();
+                    polygon_5_data.append('update_polygon_5_points', 'True')
+                    let id_ = 1
+                    for (let element of polygon_5_coordinates)
+                      {
+                        polygon_5_data.append(id_, element)
+                        id_ += 1;
+                      }
+                    let polygon_5_xhttp = new XMLHttpRequest();
+                    let csrftoken = "{{ csrf_token }}"
+                    polygon_5_xhttp.open("POST", "{% url 'get_polygon_5_points' %}")
+                    polygon_5_xhttp.setRequestHeader("X-CSRFToken", csrftoken);
+                    polygon_5_xhttp.send(polygon_5_data)
+                  });
+
+              }
+          }
+
+      }
+      draw_poligon_5()
       //полигон
 
-    
+
 
     // Контекстное меню, позволяющее изменить параметры метки.
     // Вызывается при нажатии правой кнопкой мыши на метке.
     map.events.add('contextmenu', function (e) {
-     
+
       let xhttp = new XMLHttpRequest();
-      
-      
+
+
       xhttp.onreadystatechange = function()
         {
           if (this.readyState == 4 && this.status == 200)
@@ -660,21 +768,21 @@ a:hover {
       }
       var coords = e.get('coords');
      // Создаем метку.
-      var myPlacemark = new ymaps.Placemark(coords, {}, 
+      var myPlacemark = new ymaps.Placemark(coords, {},
         {
           // Красная иконка, растягивающаяся под содержимое.
           preset: "islands#redStretchyIcon",
           iconLayout: 'default#image',
         });
-    
+
         // Если меню метки уже отображено, то убираем его.
-      if ($('#menu').css('display') == 'block') 
+      if ($('#menu').css('display') == 'block')
         {
           $('#menu').remove();
-        } 
-     else 
-        { 
-        
+        }
+     else
+        {
+
           // HTML-содержимое контекстного меню.
           var menuContent =
               '<div id="menu">\
@@ -700,9 +808,9 @@ a:hover {
           coordinates = myPlacemark.geometry.getCoordinates()
           $('#menu input[name="latitude"]').val(coordinates[0]);
           $('#menu input[name="longitude"]').val(coordinates[1]);
-          
+
           var myReverseGeocoder = ymaps.geocode([coordinates[0],coordinates[1]])
-          
+
 				  myReverseGeocoder.then(function (res) {
             $('#menu textarea[name="hint_text"]').val(res.geoObjects.get(0).properties.get('text'));
             point_data.append('address', res.geoObjects.get(0).properties.get('text'))
@@ -755,7 +863,7 @@ a:hover {
               balloonContentHeader: 'Гидрант',
               balloonContentBody : '<b>Адрес:</b> ' + address +'<br/>' +  '<b>Примечание: </b>' + user_comments,
               balloonContentFooter: "<b>Дата:</b> Только что",
-              
+
               hintContent: 'Подробности метки гидрант'
               });
 
@@ -800,15 +908,15 @@ a:hover {
         }
 
   });
-    
+
   map.events.add('dblclick', function (e)
       {
-        
+
         var coords = e.get('coords');
 
         let placemark_in_polygon = new ymaps.Placemark(coords,
           {
-            
+
           },
           {
           balloonPanelMaxMapArea: 0,
@@ -818,7 +926,7 @@ a:hover {
           iconImageOffset: [-10, -20]
         });
         map.geoObjects.add(placemark_in_polygon);
-        
+
         e.preventDefault();
         let xhttp_get_department = new XMLHttpRequest();
         xhttp_get_department.open("POST", "{% url 'get_department' %}")
@@ -858,80 +966,14 @@ chatSocket.onmessage = function(e){
     let data = JSON.parse(e.data)
     if(data.type === 'chat')
     {
-        //var messages = document.getElementsByTagName("input")[0];
-        //var click_find = document.getElementsByTagName("input")[0];
-        //console.log(messages)
-       // messages.value = "Казахстан, Тараз, " +data.message +" "+ data.message2
-       // console.log("Казахстан, Тараз, " +data.message +" "+ data.message2)
-        // console.log(data.latitude_temp)
-        // console.log(data.longitude_temp)
-        // console.log(data.message)
-        // console.log(data.message2)
-
-        
         searchControl.search("Казахстан, Тараз, " +data.message +" "+ data.message2);
-        //searchControl.showResult(0)
-        // map.setCenter(socket_placemark.geometry.getCoordinates(), 50, {
-        //         duration: 150000,
-        // globalPixel = projection.toGlobalPixels([data.latitude_temp, data.longitude_temp], map.getZoom()),
-
-        // size = map.container.getSize();
-        //searchControl.showResult(0);
-        // var geo = socket_placemark.geometry.getCoordinates()
-
-        // projection =  map.options.get('projection')
-
-        // globalPixel = projection.toGlobalPixels(geo, map.getZoom())
-
-
-
-        // var socket_placemark = new ymaps.Placemark([data.latitude_temp, data.longitude_temp], {}, 
-        //     {
-        //       balloonPanelMaxMapArea: 0,
-        //       iconLayout: 'default#image',
-        //       iconImageHref: "{% static 'images/fire.png' %}",
-        //       iconImageSize: [50, 50],
-        //       iconImageOffset: [-10, -20]
-        //     });
-        //     socket_placemark.properties.set({
-        //             balloonContentHeader: 'Пожар',
-        //             balloonContentBody : '<b>Адрес:</b> ' + data.message +" "+ data.message2 +'<br/>' ,
-        //             balloonContentFooter: "<b>Дата:</b>",
-        //             hintContent: this.responseText
-        //           });
-        // map.geoObjects.add(socket_placemark)
-
-        // map.options.set('maxAnimationZoomDifference', Infinity);
-        // map.setZoom(17,{duration:200}).then(() => map.setZoom(30,{duration:500}));
-
-        // var balloon = new ymaps.Balloon(map);
-        // balloon.options.setParent(map.options);
-        // balloon.open([data.latitude_temp, data.longitude_temp]);
-              
-
-
-          // var clusterer = new ymaps.Clusterer();
-          // clusterer.getObjectState(socket_placemark).cluster.state.set('activeObject', socket_placemark);
-          // var geoObjectState = clusterer.getObjectState(socket_placemark);
-
-          // map.balloon.open([data.latitude_temp, data.longitude_temp],{},
-          //    {
-          //     balloonContentHeader: 'Пожар',
-          //     balloonContentBody : '<b>Адрес:</b> ' + data.message +" "+ data.message2 +'<br/>' ,
-          //     balloonContentFooter: "<b>Дата:</b>",
-          //     //hintContent: this.responseText
-          //     });
-        
-        // map.setCenter(socket_placemark.geometry.getCoordinates(), 50, {
-        //   duration: 150000,
-        //   callback: function(){socket_placemark.balloon.open()}});
     }
  }
 }
 
 ymaps.ready(init);
 
- 
+
 
   </script>
     <table id="poligon_1_buttons">
@@ -940,18 +982,21 @@ ymaps.ready(init);
         <td><button id="draw_poligon_2" type="button">Нарисовать Область СПЧ-2</button></td>
         <td><button id="draw_poligon_3" type="button">Нарисовать Область СПЧ-3</button></td>
         <td><button id="draw_poligon_4" type="button">Нарисовать Область СПЧ-4</button></td>
+        <td><button id="draw_poligon_5" type="button">Нарисовать Область СПЧ-5</button></td>
       </tr>
       <tr>
         <td><button id="edit_poligon_1">Изменить Область СПЧ-1</button></td>
         <td><button id="edit_poligon_2">Изменить Область СПЧ-2</button></td>
         <td><button id="edit_poligon_3">Изменить Область СПЧ-3</button></td>
         <td><button id="edit_poligon_4">Изменить Область СПЧ-4</button></td>
+        <td><button id="edit_poligon_5">Изменить Область СПЧ-5</button></td>
       </tr>
       <tr>
         <td><button id="save_poligon_1">Сохранить Область СПЧ-1</button></td>
         <td><button id="save_poligon_2">Сохранить Область СПЧ-2</button></td>
         <td><button id="save_poligon_3">Сохранить Область СПЧ-3</button></td>
         <td><button id="save_poligon_4">Сохранить Область СПЧ-4</button></td>
+        <td><button id="save_poligon_5">Сохранить Область СПЧ-5</button></td>
       </tr>
     </table>
 </body>

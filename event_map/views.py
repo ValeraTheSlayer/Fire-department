@@ -5,7 +5,8 @@ from .models import Hydrants, FireHistory, SecurePlaces, \
                         Polygon_1_Coordinates, \
                         Polygon_2_Coordinates,\
                         Polygon_3_Coordinates,\
-                        Polygon_4_Coordinates
+                        Polygon_4_Coordinates,\
+                        Polygon_5_Coordinates
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 from decimal import Decimal
@@ -234,6 +235,33 @@ def get_polygon_4_points(request):
     return HttpResponse('empty')
 
 
+def get_polygon_5_points(request):
+    if request.method == 'POST' and 'update_polygon_5_points' in request.POST:
+        Polygon_5_Coordinates.objects.all().delete()
+        for id_ in range(1, len(request.POST)):
+            point = request.POST.get(f'{id_}')
+            point_lat = float(point.split(',')[0])
+            point_long = float(point.split(',')[1])
+            Polygon_5_Coordinates.objects.create(
+                latitude=point_lat,
+                longitude=point_long,
+                )
+        return HttpResponse('get_polygon_5_points success')
+    if request.method == 'GET':
+        polygon_5_coordinates = Polygon_5_Coordinates.objects.all()
+        polygon_5_coordinates_dict = {}
+        id_ = 0
+        for point in polygon_5_coordinates:
+            latitude = point.latitude
+            longitude = point.longitude
+            polygon_5_coordinates_dict[id_] = {'latitude': latitude,
+                                               'longitude': longitude}
+            id_ += 1
+        polygon_5_coordinates_json = json.dumps(polygon_5_coordinates_dict)
+        return HttpResponse(polygon_5_coordinates_json, content_type="application/json")
+    return HttpResponse('empty')
+
+
 def get_department(request):
     point_type = request.POST.get('point_type')
     polygon_1_coordinates = Polygon_1_Coordinates.objects.all()
@@ -247,6 +275,9 @@ def get_department(request):
 
     polygon_4_coordinates = Polygon_4_Coordinates.objects.all()
     polygon_4_coordinates_list = []
+
+    polygon_5_coordinates = Polygon_5_Coordinates.objects.all()
+    polygon_5_coordinates_list = []
 
     for point in polygon_1_coordinates:
         latitude = point.latitude
@@ -268,15 +299,22 @@ def get_department(request):
         longitude = point.longitude
         polygon_4_coordinates_list.append([longitude, latitude])
 
+    for point in polygon_5_coordinates:
+        latitude = point.latitude
+        longitude = point.longitude
+        polygon_5_coordinates_list.append([longitude, latitude])
+
     polygon_1_coordinates_list_np = np.array(polygon_1_coordinates_list)
     polygon_2_coordinates_list_np = np.array(polygon_2_coordinates_list)
     polygon_3_coordinates_list_np = np.array(polygon_3_coordinates_list)
     polygon_4_coordinates_list_np = np.array(polygon_4_coordinates_list)
+    polygon_5_coordinates_list_np = np.array(polygon_5_coordinates_list)
 
     polygon_1 = Polygon(polygon_1_coordinates_list_np)
     polygon_2 = Polygon(polygon_2_coordinates_list_np)
     polygon_3 = Polygon(polygon_3_coordinates_list_np)
     polygon_4 = Polygon(polygon_4_coordinates_list_np)
+    polygon_5 = Polygon(polygon_5_coordinates_list_np)
 
     if request.method == 'POST' and 'get_department' == point_type:
         point_latitude = request.POST.get('lat')
@@ -293,6 +331,8 @@ def get_department(request):
             return HttpResponse('Область СПЧ-3')
         if check_point.within(polygon_4):
             return HttpResponse('Область СПЧ-4')
+        if check_point.within(polygon_5):
+            return HttpResponse('Область СПЧ-5')
 
         return HttpResponse('Не входит в ДЧС города Тараз')
     if request.method == 'POST' and 'get_department_card' == point_type:
@@ -325,6 +365,12 @@ def get_department(request):
             department_dict = {'latitude': latitude,
                                'longitude': longitude,
                                'department_text': 'Область СПЧ-4'}
+            department_json = json.dumps(department_dict)
+            return HttpResponse(department_json, content_type="application/json")
+        if check_point.within(polygon_5):
+            department_dict = {'latitude': latitude,
+                               'longitude': longitude,
+                               'department_text': 'Область СПЧ-5'}
             department_json = json.dumps(department_dict)
             return HttpResponse(department_json, content_type="application/json")
         department_dict = {'latitude': latitude,

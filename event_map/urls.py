@@ -9,5 +9,6 @@ urlpatterns = [
     path('get_polygon_2_points', views.get_polygon_2_points, name='get_polygon_2_points'),
     path('get_polygon_3_points', views.get_polygon_3_points, name='get_polygon_3_points'),
     path('get_polygon_4_points', views.get_polygon_4_points, name='get_polygon_4_points'),
+    path('get_polygon_5_points', views.get_polygon_5_points, name='get_polygon_5_points'),
     path('get_department', views.get_department, name='get_department')
 ]
